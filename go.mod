@@ -1,3 +1,3 @@
-module git.adyxax.org/adyxax/tfstate
+module git.adyxax.org/adyxax/tfstated
 
 go 1.23.1
