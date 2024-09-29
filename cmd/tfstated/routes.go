@@ -1,7 +1,16 @@
 package main
 
-import "net/http"
+import (
+	"net/http"
 
-func addRoutes(mux *http.ServeMux) {
+	"git.adyxax.org/adyxax/tfstated/pkg/database"
+)
+
+func addRoutes(
+	mux *http.ServeMux,
+	db *database.DB,
+) {
 	mux.Handle("GET /healthz", handleHealthz())
+	mux.Handle("GET /", handleGet(db))
+	mux.Handle("POST /", handlePost(db))
 }

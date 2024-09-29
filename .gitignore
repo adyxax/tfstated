@@ -1,1 +1,4 @@
 tfstate
+tfstate.db
+tfstate.db-shm
+tfstate.db-wal

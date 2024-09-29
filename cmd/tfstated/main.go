@@ -12,6 +12,8 @@ import (
 	"os/signal"
 	"sync"
 	"time"
+
+	"git.adyxax.org/adyxax/tfstated/pkg/database"
 )
 
 type Config struct {
@@ -22,6 +24,7 @@ type Config struct {
 func run(
 	ctx context.Context,
 	config *Config,
+	db *database.DB,
 	args []string,
 	getenv func(string) string,
 	stdin io.Reader,
@@ -30,10 +33,20 @@ func run(
 	ctx, cancel := signal.NotifyContext(ctx, os.Interrupt)
 	defer cancel()
 
+	dataEncryptionKey := getenv("DATA_ENCRYPTION_KEY")
+	if dataEncryptionKey == "" {
+		return fmt.Errorf("the DATA_ENCRYPTION_KEY environment variable is not set")
+	}
+	if err := db.SetDataEncryptionKey(dataEncryptionKey); err != nil {
+		return err
+	}
+
 	mux := http.NewServeMux()
 	addRoutes(
 		mux,
+		db,
 	)
+
 	httpServer := &http.Server{
 		Addr:    net.JoinHostPort(config.Host, config.Port),
 		Handler: mux,
@@ -79,9 +92,17 @@ func main() {
 		Port: "8080",
 	}
 
+	db, err := database.NewDB(ctx, "./tfstate.db?_txlock=immediate")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "database init error: %+v\n", err)
+		os.Exit(1)
+	}
+	defer db.Close()
+
 	if err := run(
 		ctx,
 		&config,
+		db,
 		os.Args,
 		os.Getenv,
 		os.Stdin,
