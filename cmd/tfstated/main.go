@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"git.adyxax.org/adyxax/tfstated/pkg/database"
+	"git.adyxax.org/adyxax/tfstated/pkg/logger"
 )
 
 type Config struct {
@@ -49,7 +50,7 @@ func run(
 
 	httpServer := &http.Server{
 		Addr:    net.JoinHostPort(config.Host, config.Port),
-		Handler: mux,
+		Handler: logger.Middleware(mux),
 	}
 	go func() {
 		log.Printf("listening on %s\n", httpServer.Addr)

@@ -11,6 +11,7 @@ func addRoutes(
 	db *database.DB,
 ) {
 	mux.Handle("GET /healthz", handleHealthz())
+
 	mux.Handle("GET /", handleGet(db))
 	mux.Handle("POST /", handlePost(db))
 }
