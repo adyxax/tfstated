@@ -14,5 +14,7 @@ func addRoutes(
 
 	mux.Handle("DELETE /", handleDelete(db))
 	mux.Handle("GET /", handleGet(db))
+	mux.Handle("LOCK /", handleLock(db))
 	mux.Handle("POST /", handlePost(db))
+	mux.Handle("UNLOCK /", handleUnlock(db))
 }

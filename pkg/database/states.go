@@ -2,6 +2,7 @@ package database
 
 import (
 	"database/sql"
+	"fmt"
 )
 
 func (db *DB) DeleteState(name string) error {
@@ -18,18 +19,31 @@ func (db *DB) GetState(name string) ([]byte, error) {
 	return db.dataEncryptionKey.DecryptAES256(encryptedData)
 }
 
-func (db *DB) SetState(name string, data []byte) error {
+// returns true in case of id mismatch
+func (db *DB) SetState(name string, data []byte, id string) (bool, error) {
 	encryptedData, err := db.dataEncryptionKey.EncryptAES256(data)
 	if err != nil {
-		return err
+		return false, err
 	}
-	_, err = db.Exec(
-		`INSERT INTO states(name, data) VALUES (:name, :data) ON CONFLICT DO UPDATE SET data = :data WHERE name = :name;`,
-		sql.Named("data", encryptedData),
-		sql.Named("name", name),
-	)
-	if err != nil {
-		return err
+	if id == "" {
+		_, err = db.Exec(
+			`INSERT INTO states(name, data) VALUES (:name, :data) ON CONFLICT DO UPDATE SET data = :data WHERE name = :name;`,
+			sql.Named("data", encryptedData),
+			sql.Named("name", name),
+		)
+		return false, err
+	} else {
+		result, err := db.Exec(`UPDATE states SET data = ? WHERE name = ? and lock->>'ID' = ?;`, encryptedData, name, id)
+		if err != nil {
+			return false, err
+		}
+		n, err := result.RowsAffected()
+		if err != nil {
+			return false, err
+		}
+		if n != 1 {
+			return true, fmt.Errorf("failed to update state, lock ID does not match")
+		}
+		return false, nil
 	}
-	return nil
 }

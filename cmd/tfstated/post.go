@@ -16,13 +16,20 @@ func handlePost(db *database.DB) http.Handler {
 			)
 			return
 		}
+
+		id := r.URL.Query().Get("ID")
+
 		data, err := io.ReadAll(r.Body)
 		if err != nil {
 			_ = errorResponse(w, http.StatusBadRequest, err)
 			return
 		}
-		if err := db.SetState(r.URL.Path, data); err != nil {
-			_ = errorResponse(w, http.StatusInternalServerError, err)
+		if idMismatch, err := db.SetState(r.URL.Path, data, id); err != nil {
+			if idMismatch {
+				_ = errorResponse(w, http.StatusConflict, err)
+			} else {
+				_ = errorResponse(w, http.StatusInternalServerError, err)
+			}
 		} else {
 			w.WriteHeader(http.StatusOK)
 		}
