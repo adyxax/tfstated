@@ -4,6 +4,11 @@ import (
 	"database/sql"
 )
 
+func (db *DB) DeleteState(name string) error {
+	_, err := db.Exec(`DELETE FROM states WHERE name = ?;`, name)
+	return err
+}
+
 func (db *DB) GetState(name string) ([]byte, error) {
 	var encryptedData []byte
 	err := db.QueryRow(`SELECT data FROM states WHERE name = ?;`, name).Scan(&encryptedData)
