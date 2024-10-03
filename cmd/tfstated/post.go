@@ -20,7 +20,7 @@ func handlePost(db *database.DB) http.Handler {
 		id := r.URL.Query().Get("ID")
 
 		data, err := io.ReadAll(r.Body)
-		if err != nil {
+		if err != nil || len(data) == 0 {
 			_ = errorResponse(w, http.StatusBadRequest, err)
 			return
 		}
