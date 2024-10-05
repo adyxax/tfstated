@@ -5,9 +5,17 @@ import (
 	"fmt"
 )
 
-func (db *DB) DeleteState(name string) error {
-	_, err := db.Exec(`DELETE FROM states WHERE name = ?;`, name)
-	return err
+// returns true in case of successful deletion
+func (db *DB) DeleteState(name string) (bool, error) {
+	result, err := db.Exec(`DELETE FROM states WHERE name = ?;`, name)
+	if err != nil {
+		return false, err
+	}
+	n, err := result.RowsAffected()
+	if err != nil {
+		return false, err
+	}
+	return n == 1, nil
 }
 
 func (db *DB) GetState(name string) ([]byte, error) {

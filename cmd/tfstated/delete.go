@@ -1,8 +1,6 @@
 package main
 
 import (
-	"database/sql"
-	"errors"
 	"fmt"
 	"net/http"
 
@@ -17,15 +15,13 @@ func handleDelete(db *database.DB) http.Handler {
 			return
 		}
 
-		if err := db.DeleteState(r.URL.Path); err != nil {
-			if errors.Is(err, sql.ErrNoRows) {
-				_ = errorResponse(w, http.StatusNotFound,
-					fmt.Errorf("state path not found: %s", r.URL.Path))
-			} else {
-				_ = errorResponse(w, http.StatusInternalServerError, err)
-			}
-		} else {
+		if success, err := db.DeleteState(r.URL.Path); err != nil {
+			_ = errorResponse(w, http.StatusInternalServerError, err)
+		} else if success {
 			w.WriteHeader(http.StatusOK)
+		} else {
+			_ = errorResponse(w, http.StatusNotFound,
+				fmt.Errorf("state path not found: %s", r.URL.Path))
 		}
 	})
 }
