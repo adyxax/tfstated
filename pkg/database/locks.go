@@ -1,12 +1,14 @@
 package database
 
 import (
+	"database/sql"
 	"encoding/json"
+	"errors"
 )
 
-// Atomically check if there is an existing lock in place on the state. Returns
-// true if it can be set, otherwise returns false and lock is set to the value
-// of the existing lock
+// Atomically check the lock status of a state and lock it if unlocked. Returns
+// true if the function locked the state, otherwise returns false and the lock
+// parameter is updated to the value of the existing lock
 func (db *DB) SetLockOrGetExistingLock(name string, lock any) (bool, error) {
 	tx, err := db.Begin()
 	if err != nil {
@@ -17,18 +19,35 @@ func (db *DB) SetLockOrGetExistingLock(name string, lock any) (bool, error) {
 			_ = tx.Rollback()
 		}
 	}()
-	var data []byte
-	if err = tx.QueryRowContext(db.ctx, `SELECT lock FROM states WHERE name = ?;`, name).Scan(&data); err != nil {
+	var lockData []byte
+	if err = tx.QueryRowContext(db.ctx, `SELECT lock FROM states WHERE name = ?;`, name).Scan(&lockData); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			if lockData, err = json.Marshal(lock); err != nil {
+				return false, err
+			}
+			_, err = tx.ExecContext(db.ctx,
+				`INSERT INTO states(name, lock) VALUES (:name, json(:lock))`,
+				sql.Named("lock", lockData),
+				sql.Named("name", name),
+			)
+			if err != nil {
+				return false, err
+			}
+			err = tx.Commit()
+			return true, err
+		} else {
+			return false, err
+		}
+	}
+	if lockData != nil {
+		_ = tx.Rollback()
+		err = json.Unmarshal(lockData, lock)
 		return false, err
 	}
-	if data != nil {
-		err = json.Unmarshal(data, lock)
+	if lockData, err = json.Marshal(lock); err != nil {
 		return false, err
 	}
-	if data, err = json.Marshal(lock); err != nil {
-		return false, err
-	}
-	_, err = tx.Exec(`UPDATE states SET lock = json(?) WHERE name = ?;`, data, name)
+	_, err = tx.ExecContext(db.ctx, `UPDATE states SET lock = json(?) WHERE name = ?;`, lockData, name)
 	if err != nil {
 		return false, err
 	}

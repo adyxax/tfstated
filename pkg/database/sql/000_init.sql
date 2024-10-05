@@ -5,7 +5,7 @@ CREATE TABLE schema_version (
 CREATE TABLE states (
   id INTEGER PRIMARY KEY,
   name TEXT NOT NULL,
-  data BLOB NOT NULL,
+  data BLOB,
   lock TEXT
 ) STRICT;
 CREATE UNIQUE INDEX states_name on states(name);

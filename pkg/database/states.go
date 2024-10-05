@@ -24,6 +24,9 @@ func (db *DB) GetState(name string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	if encryptedData == nil {
+		return []byte{}, nil
+	}
 	return db.dataEncryptionKey.DecryptAES256(encryptedData)
 }
 

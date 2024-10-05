@@ -1,10 +1,9 @@
 package main
 
 import (
-	"database/sql"
-	"errors"
 	"fmt"
 	"net/http"
+	"regexp"
 	"time"
 
 	"git.adyxax.org/adyxax/tfstated/pkg/database"
@@ -20,6 +19,18 @@ type lockRequest struct {
 	Who       string    `json:"Who"`
 }
 
+var (
+	validID = regexp.MustCompile("[a-f0-9]{8}-(?:[a-f0-9]{4}-){3}[a-f0-9]{12}")
+)
+
+func (l *lockRequest) valid() []error {
+	err := make([]error, 0)
+	if !validID.MatchString(l.ID) {
+		err = append(err, fmt.Errorf("invalid ID"))
+	}
+	return err
+}
+
 func handleLock(db *database.DB) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/" {
@@ -33,13 +44,13 @@ func handleLock(db *database.DB) http.Handler {
 			_ = encode(w, http.StatusBadRequest, err)
 			return
 		}
+		if errs := lock.valid(); len(errs) > 0 {
+			_ = encode(w, http.StatusBadRequest,
+				fmt.Errorf("invalid lock: %+v", errs))
+			return
+		}
 		if success, err := db.SetLockOrGetExistingLock(r.URL.Path, &lock); err != nil {
-			if errors.Is(err, sql.ErrNoRows) {
-				_ = encode(w, http.StatusNotFound,
-					fmt.Errorf("state path not found: %s", r.URL.Path))
-			} else {
-				_ = errorResponse(w, http.StatusInternalServerError, err)
-			}
+			_ = errorResponse(w, http.StatusInternalServerError, err)
 		} else if success {
 			w.WriteHeader(http.StatusOK)
 		} else {
