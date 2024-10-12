@@ -1,8 +1,6 @@
 package main
 
 import (
-	"database/sql"
-	"errors"
 	"fmt"
 	"net/http"
 
@@ -23,12 +21,7 @@ func handleUnlock(db *database.DB) http.Handler {
 			return
 		}
 		if success, err := db.Unlock(r.URL.Path, &lock); err != nil {
-			if errors.Is(err, sql.ErrNoRows) {
-				_ = encode(w, http.StatusNotFound,
-					fmt.Errorf("state path not found: %s", r.URL.Path))
-			} else {
-				_ = errorResponse(w, http.StatusInternalServerError, err)
-			}
+			_ = errorResponse(w, http.StatusInternalServerError, err)
 		} else if success {
 			w.WriteHeader(http.StatusOK)
 		} else {
