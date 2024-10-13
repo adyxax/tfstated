@@ -2,6 +2,7 @@ package logger
 
 import (
 	"bufio"
+	"bytes"
 	"errors"
 	"net"
 	"net/http"
@@ -9,11 +10,20 @@ import (
 
 type bodyWriter struct {
 	http.ResponseWriter
-	status int
+	body    *bytes.Buffer
+	maxSize int
+	bytes   int
+	status  int
 }
 
-func newBodyWriter(writer http.ResponseWriter) *bodyWriter {
+func newBodyWriter(writer http.ResponseWriter, recordBody bool) *bodyWriter {
+	var body *bytes.Buffer
+	if recordBody {
+		body = bytes.NewBufferString("")
+	}
 	return &bodyWriter{
+		body:           body,
+		maxSize:        64000,
 		ResponseWriter: writer,
 		status:         http.StatusNotImplemented,
 	}
@@ -21,6 +31,15 @@ func newBodyWriter(writer http.ResponseWriter) *bodyWriter {
 
 // implements http.ResponseWriter
 func (w *bodyWriter) Write(b []byte) (int, error) {
+	if w.body != nil {
+		if w.body.Len()+len(b) > w.maxSize {
+			w.body.Write(b[:w.maxSize-w.body.Len()])
+		} else {
+			w.body.Write(b)
+		}
+	}
+
+	w.bytes += len(b)
 	return w.ResponseWriter.Write(b)
 }
 

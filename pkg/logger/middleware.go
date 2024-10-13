@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func Middleware(next http.Handler) http.Handler {
+func Middleware(next http.Handler, recordBody bool) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "GET" && r.URL.Path == "/healthz" {
 			next.ServeHTTP(w, r)
@@ -29,7 +29,7 @@ func Middleware(next http.Handler) http.Handler {
 		path := r.URL.Path
 		query := r.URL.RawQuery
 
-		bw := newBodyWriter(w)
+		bw := newBodyWriter(w, recordBody)
 
 		next.ServeHTTP(bw, r)
 
@@ -45,7 +45,11 @@ func Middleware(next http.Handler) http.Handler {
 		responseAttributes := []slog.Attr{
 			slog.Time("time", end.UTC()),
 			slog.Duration("latency", end.Sub(start)),
+			slog.Int("length", bw.bytes),
 			slog.Int("status", bw.status),
+		}
+		if recordBody {
+			responseAttributes = append(responseAttributes, slog.String("body", bw.body.String()))
 		}
 		attributes := []slog.Attr{
 			{

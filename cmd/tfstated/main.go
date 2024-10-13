@@ -51,7 +51,7 @@ func run(
 
 	httpServer := &http.Server{
 		Addr:    net.JoinHostPort(config.Host, config.Port),
-		Handler: logger.Middleware(mux),
+		Handler: logger.Middleware(mux, false),
 	}
 	go func() {
 		log.Printf("listening on %s\n", httpServer.Addr)
