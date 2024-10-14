@@ -3,7 +3,6 @@ package scrypto
 import (
 	"encoding/hex"
 	"slices"
-	"strings"
 	"testing"
 )
 
@@ -18,7 +17,7 @@ func TestAES256KeyHex(t *testing.T) {
 	if slices.Compare(testKey, key[:]) != 0 {
 		t.Errorf("got %v, wanted %v", testKey, key[:])
 	}
-	if strings.Compare(testKeyHex, key.Hex()) != 0 {
+	if testKeyHex != key.Hex() {
 		t.Errorf("got %v, wanted %v", testKeyHex, key.Hex())
 	}
 }

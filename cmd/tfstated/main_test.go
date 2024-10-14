@@ -13,7 +13,7 @@ import (
 	"git.adyxax.org/adyxax/tfstated/pkg/database"
 )
 
-var baseURI = &url.URL{
+var baseURI = url.URL{
 	Host:   "127.0.0.1:8081",
 	Path:   "/",
 	Scheme: "http",
