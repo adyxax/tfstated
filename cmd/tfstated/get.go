@@ -1,8 +1,6 @@
 package main
 
 import (
-	"database/sql"
-	"errors"
 	"fmt"
 	"net/http"
 
@@ -20,12 +18,7 @@ func handleGet(db *database.DB) http.Handler {
 		}
 
 		if data, err := db.GetState(r.URL.Path); err != nil {
-			if errors.Is(err, sql.ErrNoRows) {
-				_ = errorResponse(w, http.StatusNotFound,
-					fmt.Errorf("state path not found: %s", r.URL.Path))
-			} else {
-				_ = errorResponse(w, http.StatusInternalServerError, err)
-			}
+			_ = errorResponse(w, http.StatusInternalServerError, err)
 		} else {
 			w.WriteHeader(http.StatusOK)
 			_, _ = w.Write(data)

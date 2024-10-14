@@ -25,11 +25,7 @@ func (db *DB) SetLockOrGetExistingLock(name string, lock any) (bool, error) {
 			if lockData, err = json.Marshal(lock); err != nil {
 				return false, err
 			}
-			_, err = tx.ExecContext(db.ctx,
-				`INSERT INTO states(name, lock) VALUES (:name, json(:lock))`,
-				sql.Named("lock", lockData),
-				sql.Named("name", name),
-			)
+			_, err = tx.ExecContext(db.ctx, `INSERT INTO states(name, lock) VALUES (?, json(?))`, name, lockData)
 			if err != nil {
 				return false, err
 			}

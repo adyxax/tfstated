@@ -18,7 +18,7 @@ func TestGet(t *testing.T) {
 		msg    string
 	}{
 		{"GET", &url.URL{Path: "/"}, nil, "", http.StatusBadRequest, "/"},
-		{"GET", &url.URL{Path: "/non_existent_get"}, nil, "", http.StatusNotFound, "non existent"},
+		{"GET", &url.URL{Path: "/non_existent_get"}, strings.NewReader(""), "", http.StatusOK, "non existent"},
 		{"POST", &url.URL{Path: "/test_get"}, strings.NewReader("the_test_get"), "", http.StatusOK, "/test_get"},
 		{"GET", &url.URL{Path: "/test_get"}, nil, "the_test_get", http.StatusOK, "/test_get"},
 	}
