@@ -13,6 +13,7 @@ CREATE TABLE versions (
   id INTEGER PRIMARY KEY,
   state_id INTEGER,
   data BLOB,
+  lock TEXT,
   created INTEGER DEFAULT (unixepoch()),
   FOREIGN KEY(state_id) REFERENCES states(id) ON DELETE CASCADE
 ) STRICT;

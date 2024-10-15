@@ -74,7 +74,13 @@ func (db *DB) SetState(name string, data []byte, lockID string) (bool, error) {
 		err = fmt.Errorf("failed to update state, lock ID does not match")
 		return true, err
 	}
-	_, err = tx.ExecContext(db.ctx, `INSERT INTO versions(state_id, data) VALUES (?, ?);`, stateID, encryptedData)
+	_, err = tx.ExecContext(db.ctx,
+		`INSERT INTO versions(state_id, data, lock)
+           SELECT :stateID, :data, lock
+             FROM states
+             WHERE states.id = :stateID;`,
+		sql.Named("stateID", stateID),
+		sql.Named("data", encryptedData))
 	if err != nil {
 		return false, err
 	}
