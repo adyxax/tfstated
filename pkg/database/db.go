@@ -26,10 +26,11 @@ func initDB(ctx context.Context, url string) (*sql.DB, error) {
 }
 
 type DB struct {
-	ctx               context.Context
-	dataEncryptionKey scrypto.AES256Key
-	readDB            *sql.DB
-	writeDB           *sql.DB
+	ctx                  context.Context
+	dataEncryptionKey    scrypto.AES256Key
+	readDB               *sql.DB
+	versionsHistoryLimit int
+	writeDB              *sql.DB
 }
 
 func NewDB(ctx context.Context, url string) (*DB, error) {
@@ -56,9 +57,10 @@ func NewDB(ctx context.Context, url string) (*DB, error) {
 	writeDB.SetMaxOpenConns(1)
 
 	db := DB{
-		ctx:     ctx,
-		readDB:  readDB,
-		writeDB: writeDB,
+		ctx:                  ctx,
+		readDB:               readDB,
+		versionsHistoryLimit: 64,
+		writeDB:              writeDB,
 	}
 	if _, err = db.Exec("PRAGMA foreign_keys = ON"); err != nil {
 		return nil, err
@@ -100,4 +102,8 @@ func (db *DB) QueryRow(query string, args ...any) *sql.Row {
 
 func (db *DB) SetDataEncryptionKey(s string) error {
 	return db.dataEncryptionKey.FromBase64(s)
+}
+
+func (db *DB) SetVersionsHistoryLimit(n int) {
+	db.versionsHistoryLimit = n
 }

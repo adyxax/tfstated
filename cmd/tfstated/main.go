@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"sync"
 	"time"
 
@@ -41,6 +42,14 @@ func run(
 	}
 	if err := db.SetDataEncryptionKey(dataEncryptionKey); err != nil {
 		return err
+	}
+	versionsHistoryLimit := getenv("VERSIONS_HISTORY_LIMIT")
+	if versionsHistoryLimit != "" {
+		n, err := strconv.Atoi(versionsHistoryLimit)
+		if err != nil {
+			return fmt.Errorf("failed to parse the VERSIONS_HISTORY_LIMIT environment variable: %w", err)
+		}
+		db.SetVersionsHistoryLimit(n)
 	}
 
 	mux := http.NewServeMux()

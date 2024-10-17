@@ -102,7 +102,8 @@ func (db *DB) SetState(name string, data []byte, lockID string) (bool, error) {
                                 JOIN states ON states.id = versions.state_id
                                 WHERE states.name = :name
                                 ORDER BY versions.id DESC
-                                LIMIT 64));`,
+                                LIMIT :limit));`,
+		sql.Named("limit", db.versionsHistoryLimit),
 		sql.Named("name", name),
 	)
 	if err != nil {

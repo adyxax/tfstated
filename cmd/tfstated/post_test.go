@@ -30,6 +30,9 @@ func TestPost(t *testing.T) {
 		{"GET", url.URL{Path: "/test_post"}, nil, "the_test_post4", http.StatusOK, "/test_post"},
 		{"POST", url.URL{Path: "/test_post"}, strings.NewReader("the_test_post5"), "", http.StatusOK, "without lock ID in query string on a locked state"},
 		{"GET", url.URL{Path: "/test_post"}, nil, "the_test_post5", http.StatusOK, "/test_post"},
+		{"POST", url.URL{Path: "/test_post"}, strings.NewReader("the_test_post6"), "", http.StatusOK, "another post just to make sure the history limit works"},
+		{"POST", url.URL{Path: "/test_post"}, strings.NewReader("the_test_post7"), "", http.StatusOK, "another post just to make sure the history limit works"},
+		{"POST", url.URL{Path: "/test_post"}, strings.NewReader("the_test_post8"), "", http.StatusOK, "another post just to make sure the history limit works"},
 	}
 	for _, tt := range tests {
 		runHTTPRequest(tt.method, &tt.uri, tt.body, func(r *http.Response, err error) {
@@ -45,5 +48,16 @@ func TestPost(t *testing.T) {
 				}
 			}
 		})
+	}
+	var n int
+	err := db.QueryRow(`SELECT COUNT(versions.id)
+                   FROM versions
+                   JOIN states ON states.id = versions.state_id
+                   WHERE states.name = "/test_post"`).Scan(&n)
+	if err != nil {
+		t.Fatalf("failed to count versions for the /test_post state: %s", err)
+	}
+	if n != 3 {
+		t.Fatalf("there should only be 3 versions of the /test_post state, got %d", n)
 	}
 }

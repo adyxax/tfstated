@@ -18,6 +18,7 @@ var baseURI = url.URL{
 	Path:   "/",
 	Scheme: "http",
 }
+var db *database.DB
 
 func TestMain(m *testing.M) {
 	ctx := context.Background()
@@ -27,7 +28,8 @@ func TestMain(m *testing.M) {
 		Port: "8081",
 	}
 	_ = os.Remove("./test.db")
-	db, err := database.NewDB(ctx, "./test.db")
+	var err error
+	db, err = database.NewDB(ctx, "./test.db")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%+v\n", err)
 		os.Exit(1)
@@ -36,6 +38,8 @@ func TestMain(m *testing.M) {
 		switch key {
 		case "DATA_ENCRYPTION_KEY":
 			return "hP3ZSCnY3LMgfTQjwTaGrhKwdA0yXMXIfv67OJnntqM="
+		case "VERSIONS_HISTORY_LIMIT":
+			return "3"
 		default:
 			return ""
 		}
