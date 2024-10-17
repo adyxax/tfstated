@@ -22,7 +22,14 @@ func (db *DB) DeleteState(name string) (bool, error) {
 
 func (db *DB) GetState(name string) ([]byte, error) {
 	var encryptedData []byte
-	err := db.QueryRow(`SELECT versions.data FROM versions JOIN states ON states.id = versions.state_id  WHERE states.name = ? ORDER BY versions.id DESC LIMIT 1;`, name).Scan(&encryptedData)
+	err := db.QueryRow(
+		`SELECT versions.data
+           FROM versions
+           JOIN states ON states.id = versions.state_id
+           WHERE states.name = ?
+           ORDER BY versions.id DESC
+           LIMIT 1;`,
+		name).Scan(&encryptedData)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return []byte{}, nil
@@ -84,7 +91,23 @@ func (db *DB) SetState(name string, data []byte, lockID string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	// TODO delete old states
+	_, err = tx.ExecContext(db.ctx,
+		`DELETE FROM versions
+           WHERE state_id = (SELECT id
+                               FROM states
+                               WHERE name = :name)
+             AND id < (SELECT MIN(id)
+                         FROM(SELECT versions.id
+                                FROM versions
+                                JOIN states ON states.id = versions.state_id
+                                WHERE states.name = :name
+                                ORDER BY versions.id DESC
+                                LIMIT 64));`,
+		sql.Named("name", name),
+	)
+	if err != nil {
+		return false, err
+	}
 	err = tx.Commit()
 	return false, err
 }
