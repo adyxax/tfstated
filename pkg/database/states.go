@@ -8,8 +8,8 @@ import (
 )
 
 // returns true in case of successful deletion
-func (db *DB) DeleteState(name string) (bool, error) {
-	result, err := db.Exec(`DELETE FROM states WHERE name = ?;`, name)
+func (db *DB) DeleteState(path string) (bool, error) {
+	result, err := db.Exec(`DELETE FROM states WHERE path = ?;`, path)
 	if err != nil {
 		return false, err
 	}
@@ -20,16 +20,16 @@ func (db *DB) DeleteState(name string) (bool, error) {
 	return n == 1, nil
 }
 
-func (db *DB) GetState(name string) ([]byte, error) {
+func (db *DB) GetState(path string) ([]byte, error) {
 	var encryptedData []byte
 	err := db.QueryRow(
 		`SELECT versions.data
            FROM versions
            JOIN states ON states.id = versions.state_id
-           WHERE states.name = ?
+           WHERE states.path = ?
            ORDER BY versions.id DESC
            LIMIT 1;`,
-		name).Scan(&encryptedData)
+		path).Scan(&encryptedData)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return []byte{}, nil
@@ -43,7 +43,7 @@ func (db *DB) GetState(name string) ([]byte, error) {
 }
 
 // returns true in case of id mismatch
-func (db *DB) SetState(name string, data []byte, lockID string) (bool, error) {
+func (db *DB) SetState(path string, data []byte, lockID string) (bool, error) {
 	encryptedData, err := db.dataEncryptionKey.EncryptAES256(data)
 	if err != nil {
 		return false, err
@@ -61,10 +61,10 @@ func (db *DB) SetState(name string, data []byte, lockID string) (bool, error) {
 		stateID  int64
 		lockData []byte
 	)
-	if err = tx.QueryRowContext(db.ctx, `SELECT id, lock->>'ID' FROM states WHERE name = ?;`, name).Scan(&stateID, &lockData); err != nil {
+	if err = tx.QueryRowContext(db.ctx, `SELECT id, lock->>'ID' FROM states WHERE path = ?;`, path).Scan(&stateID, &lockData); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			var result sql.Result
-			result, err = tx.ExecContext(db.ctx, `INSERT INTO states(name) VALUES (?)`, name)
+			result, err = tx.ExecContext(db.ctx, `INSERT INTO states(path) VALUES (?)`, path)
 			if err != nil {
 				return false, err
 			}
@@ -95,16 +95,16 @@ func (db *DB) SetState(name string, data []byte, lockID string) (bool, error) {
 		`DELETE FROM versions
            WHERE state_id = (SELECT id
                                FROM states
-                               WHERE name = :name)
+                               WHERE path = :path)
              AND id < (SELECT MIN(id)
                          FROM(SELECT versions.id
                                 FROM versions
                                 JOIN states ON states.id = versions.state_id
-                                WHERE states.name = :name
+                                WHERE states.path = :path
                                 ORDER BY versions.id DESC
                                 LIMIT :limit));`,
 		sql.Named("limit", db.versionsHistoryLimit),
-		sql.Named("name", name),
+		sql.Named("path", path),
 	)
 	if err != nil {
 		return false, err

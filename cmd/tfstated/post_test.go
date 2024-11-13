@@ -53,7 +53,7 @@ func TestPost(t *testing.T) {
 	err := db.QueryRow(`SELECT COUNT(versions.id)
                    FROM versions
                    JOIN states ON states.id = versions.state_id
-                   WHERE states.name = "/test_post"`).Scan(&n)
+                   WHERE states.path = "/test_post"`).Scan(&n)
 	if err != nil {
 		t.Fatalf("failed to count versions for the /test_post state: %s", err)
 	}

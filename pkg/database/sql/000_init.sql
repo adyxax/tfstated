@@ -4,10 +4,10 @@ CREATE TABLE schema_version (
 
 CREATE TABLE states (
   id INTEGER PRIMARY KEY,
-  name TEXT NOT NULL,
+  path TEXT NOT NULL,
   lock TEXT
 ) STRICT;
-CREATE UNIQUE INDEX states_name on states(name);
+CREATE UNIQUE INDEX states_path on states(path);
 
 CREATE TABLE versions (
   id INTEGER PRIMARY KEY,
