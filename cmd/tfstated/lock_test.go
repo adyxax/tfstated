@@ -11,24 +11,26 @@ import (
 func TestLock(t *testing.T) {
 	tests := []struct {
 		method string
+		auth   bool
 		uri    url.URL
 		body   io.Reader
 		expect string
 		status int
 		msg    string
 	}{
-		{"LOCK", url.URL{Path: "/"}, nil, "", http.StatusBadRequest, "/"},
-		{"LOCK", url.URL{Path: "/non_existent_lock"}, nil, "", http.StatusBadRequest, "no lock data on non existent state"},
-		{"LOCK", url.URL{Path: "/non_existent_lock"}, strings.NewReader("{}"), "", http.StatusBadRequest, "invalid lock data on non existent state"},
-		{"LOCK", url.URL{Path: "/test_lock"}, strings.NewReader("{\"ID\":\"00000000-0000-0000-0000-000000000000\"}"), "", http.StatusOK, "valid lock data on non existent state should create it empty"},
-		{"GET", url.URL{Path: "/test_lock"}, nil, "", http.StatusOK, "/test_lock"},
-		{"LOCK", url.URL{Path: "/test_lock"}, strings.NewReader("{\"ID\":\"\"}"), "", http.StatusBadRequest, "invalid lock data on already locked state"},
-		{"LOCK", url.URL{Path: "/test_lock"}, strings.NewReader("{\"ID\":\"00000000-0000-0000-0000-000000000000\"}"), "", http.StatusConflict, "valid lock data on already locked state"},
-		{"POST", url.URL{Path: "/test_lock", RawQuery: "ID=00000000-0000-0000-0000-000000000000"}, strings.NewReader("the_test_lock"), "", http.StatusOK, "/test_lock"},
-		{"GET", url.URL{Path: "/test_lock"}, nil, "the_test_lock", http.StatusOK, "/test_lock"},
+		{"LOCK", false, url.URL{Path: "/"}, nil, "", http.StatusUnauthorized, "/"},
+		{"LOCK", true, url.URL{Path: "/"}, nil, "", http.StatusBadRequest, "/"},
+		{"LOCK", true, url.URL{Path: "/non_existent_lock"}, nil, "", http.StatusBadRequest, "no lock data on non existent state"},
+		{"LOCK", true, url.URL{Path: "/non_existent_lock"}, strings.NewReader("{}"), "", http.StatusBadRequest, "invalid lock data on non existent state"},
+		{"LOCK", true, url.URL{Path: "/test_lock"}, strings.NewReader("{\"ID\":\"00000000-0000-0000-0000-000000000000\"}"), "", http.StatusOK, "valid lock data on non existent state should create it empty"},
+		{"GET", true, url.URL{Path: "/test_lock"}, nil, "", http.StatusOK, "/test_lock"},
+		{"LOCK", true, url.URL{Path: "/test_lock"}, strings.NewReader("{\"ID\":\"\"}"), "", http.StatusBadRequest, "invalid lock data on already locked state"},
+		{"LOCK", true, url.URL{Path: "/test_lock"}, strings.NewReader("{\"ID\":\"00000000-0000-0000-0000-000000000000\"}"), "", http.StatusConflict, "valid lock data on already locked state"},
+		{"POST", true, url.URL{Path: "/test_lock", RawQuery: "ID=00000000-0000-0000-0000-000000000000"}, strings.NewReader("the_test_lock"), "", http.StatusOK, "/test_lock"},
+		{"GET", true, url.URL{Path: "/test_lock"}, nil, "the_test_lock", http.StatusOK, "/test_lock"},
 	}
 	for _, tt := range tests {
-		runHTTPRequest(tt.method, &tt.uri, tt.body, func(r *http.Response, err error) {
+		runHTTPRequest(tt.method, tt.auth, &tt.uri, tt.body, func(r *http.Response, err error) {
 			if err != nil {
 				t.Fatalf("failed %s with error: %+v", tt.method, err)
 			} else if r.StatusCode != tt.status {

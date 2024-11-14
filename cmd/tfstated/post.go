@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"git.adyxax.org/adyxax/tfstated/pkg/database"
+	"git.adyxax.org/adyxax/tfstated/pkg/model"
 )
 
 func handlePost(db *database.DB) http.Handler {
@@ -24,7 +25,8 @@ func handlePost(db *database.DB) http.Handler {
 			_ = errorResponse(w, http.StatusBadRequest, err)
 			return
 		}
-		if idMismatch, err := db.SetState(r.URL.Path, data, id); err != nil {
+		account := r.Context().Value("account").(*model.Account)
+		if idMismatch, err := db.SetState(r.URL.Path, account.Id, data, id); err != nil {
 			if idMismatch {
 				_ = errorResponse(w, http.StatusConflict, err)
 			} else {

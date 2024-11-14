@@ -19,6 +19,7 @@ var baseURI = url.URL{
 	Scheme: "http",
 }
 var db *database.DB
+var password string
 
 func TestMain(m *testing.M) {
 	ctx := context.Background()
@@ -58,6 +59,13 @@ func TestMain(m *testing.M) {
 		os.Exit(1)
 	}
 
+	admin, err := db.LoadAccountByUsername("admin")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%+v\n", err)
+		os.Exit(1)
+	}
+	password = admin.Password
+
 	ret := m.Run()
 
 	cancel()
@@ -71,13 +79,16 @@ func TestMain(m *testing.M) {
 	os.Exit(ret)
 }
 
-func runHTTPRequest(method string, uriRef *url.URL, body io.Reader, testFunc func(*http.Response, error)) {
+func runHTTPRequest(method string, auth bool, uriRef *url.URL, body io.Reader, testFunc func(*http.Response, error)) {
 	uri := baseURI.ResolveReference(uriRef)
 	client := http.Client{}
 	req, err := http.NewRequest(method, uri.String(), body)
 	if err != nil {
 		testFunc(nil, fmt.Errorf("failed to create request: %w", err))
 		return
+	}
+	if auth {
+		req.SetBasicAuth("admin", password)
 	}
 	resp, err := client.Do(req)
 	if err != nil {

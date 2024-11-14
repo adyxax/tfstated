@@ -43,7 +43,7 @@ func (db *DB) GetState(path string) ([]byte, error) {
 }
 
 // returns true in case of id mismatch
-func (db *DB) SetState(path string, data []byte, lockID string) (bool, error) {
+func (db *DB) SetState(path string, accountID int, data []byte, lockID string) (bool, error) {
 	encryptedData, err := db.dataEncryptionKey.EncryptAES256(data)
 	if err != nil {
 		return false, err
@@ -82,10 +82,11 @@ func (db *DB) SetState(path string, data []byte, lockID string) (bool, error) {
 		return true, err
 	}
 	_, err = tx.ExecContext(db.ctx,
-		`INSERT INTO versions(state_id, data, lock)
-           SELECT :stateID, :data, lock
+		`INSERT INTO versions(account_id, state_id, data, lock)
+           SELECT :accountID, :stateID, :data, lock
              FROM states
              WHERE states.id = :stateID;`,
+		sql.Named("accountID", accountID),
 		sql.Named("stateID", stateID),
 		sql.Named("data", encryptedData))
 	if err != nil {

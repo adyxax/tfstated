@@ -52,6 +52,10 @@ func run(
 		db.SetVersionsHistoryLimit(n)
 	}
 
+	if err := db.InitAdminAccount(); err != nil {
+		return err
+	}
+
 	mux := http.NewServeMux()
 	addRoutes(
 		mux,

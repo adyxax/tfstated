@@ -7,7 +7,7 @@ import (
 )
 
 func TestHealthz(t *testing.T) {
-	runHTTPRequest("GET", &url.URL{Path: "/healthz"}, nil, func(r *http.Response, err error) {
+	runHTTPRequest("GET", false, &url.URL{Path: "/healthz"}, nil, func(r *http.Response, err error) {
 		if err != nil {
 			t.Fatalf("failed healthcheck with error: %+v", err)
 		} else if r.StatusCode != http.StatusOK {
