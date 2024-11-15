@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"git.adyxax.org/adyxax/tfstated/pkg/database"
+	"git.adyxax.org/adyxax/tfstated/pkg/model"
 )
 
 func Middleware(db *database.DB) func(http.Handler) http.Handler {
@@ -32,7 +33,7 @@ func Middleware(db *database.DB) func(http.Handler) http.Handler {
 				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 				return
 			}
-			ctx := context.WithValue(r.Context(), "account", account)
+			ctx := context.WithValue(r.Context(), model.AccountContextKey{}, account)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}

@@ -25,7 +25,7 @@ func handlePost(db *database.DB) http.Handler {
 			_ = errorResponse(w, http.StatusBadRequest, err)
 			return
 		}
-		account := r.Context().Value("account").(*model.Account)
+		account := r.Context().Value(model.AccountContextKey{}).(*model.Account)
 		if idMismatch, err := db.SetState(r.URL.Path, account.Id, data, id); err != nil {
 			if idMismatch {
 				_ = errorResponse(w, http.StatusConflict, err)

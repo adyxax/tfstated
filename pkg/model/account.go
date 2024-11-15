@@ -2,6 +2,8 @@ package model
 
 import "time"
 
+type AccountContextKey struct{}
+
 type Account struct {
 	Id        int
 	Username  string
