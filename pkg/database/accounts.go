@@ -11,22 +11,27 @@ import (
 	"go.n16f.net/uuid"
 )
 
+// Overriden by tests
+var AdvertiseAdminPassword = func(password string) {
+	slog.Info("Generated an initial admin password, please change it or delete the admin account after your first login", "password", password)
+}
+
 func (db *DB) LoadAccountByUsername(username string) (*model.Account, error) {
 	account := model.Account{
 		Username: username,
 	}
 	var (
-		encryptedPassword []byte
-		created           int64
-		lastLogin         int64
+		created   int64
+		lastLogin int64
 	)
 	err := db.QueryRow(
-		`SELECT id, password, is_admin, created, last_login, settings
+		`SELECT id, salt, password_hash, is_admin, created, last_login, settings
            FROM accounts
            WHERE username = ?;`,
 		username,
 	).Scan(&account.Id,
-		&encryptedPassword,
+		&account.Salt,
+		&account.PasswordHash,
 		&account.IsAdmin,
 		&created,
 		&lastLogin,
@@ -38,11 +43,6 @@ func (db *DB) LoadAccountByUsername(username string) (*model.Account, error) {
 		}
 		return nil, err
 	}
-	password, err := db.dataEncryptionKey.DecryptAES256(encryptedPassword)
-	if err != nil {
-		return nil, err
-	}
-	account.Password = string(password)
 	account.Created = time.Unix(created, 0)
 	account.LastLogin = time.Unix(lastLogin, 0)
 	return &account, nil
@@ -69,23 +69,21 @@ func (db *DB) InitAdminAccount() error {
 		if err = password.Generate(uuid.V4); err != nil {
 			return fmt.Errorf("failed to generate initial admin password: %w", err)
 		}
-		var encryptedPassword []byte
-		encryptedPassword, err = db.dataEncryptionKey.EncryptAES256([]byte(password.String()))
-		if err != nil {
-			return fmt.Errorf("failed to encrypt initial admin password: %w", err)
-		}
+		salt := model.GenerateSalt()
+		hash := model.HashPassword(password.String(), salt)
 		if _, err = tx.ExecContext(db.ctx,
-			`INSERT INTO accounts(username, password, is_admin)
-		       VALUES ("admin", :password, TRUE)
-		       ON CONFLICT DO UPDATE SET password = :password
+			`INSERT INTO accounts(username, salt, password_hash, is_admin)
+		       VALUES ("admin", :salt, :hash, TRUE)
+		       ON CONFLICT DO UPDATE SET password_hash = :hash
 		         WHERE username = "admin";`,
-			sql.Named("password", encryptedPassword),
+			sql.Named("salt", salt),
+			sql.Named("hash", hash),
 		); err != nil {
 			return fmt.Errorf("failed to set initial admin password: %w", err)
 		}
 		err = tx.Commit()
 		if err == nil {
-			slog.Info("Generated an initial admin password, please change it or delete the admin account after your first login", "password", password.String())
+			AdvertiseAdminPassword(password.String())
 		}
 	}
 	return err

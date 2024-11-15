@@ -5,7 +5,8 @@ CREATE TABLE schema_version (
 CREATE TABLE accounts (
   id INTEGER PRIMARY KEY,
   username TEXT NOT NULL,
-  password BLOB NOT NULL,
+  salt BLOB NOT NULL,
+  password_hash BLOB NOT NULL,
   is_admin INTEGER NOT NULL DEFAULT FALSE,
   created INTEGER NOT NULL DEFAULT (unixepoch()),
   last_login INTEGER NOT NULL DEFAULT (unixepoch()),

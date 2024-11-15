@@ -19,7 +19,7 @@ var baseURI = url.URL{
 	Scheme: "http",
 }
 var db *database.DB
-var password string
+var adminPassword string
 
 func TestMain(m *testing.M) {
 	ctx := context.Background()
@@ -46,6 +46,9 @@ func TestMain(m *testing.M) {
 		}
 	}
 
+	database.AdvertiseAdminPassword = func(password string) {
+		adminPassword = password
+	}
 	go run(
 		ctx,
 		&config,
@@ -58,13 +61,6 @@ func TestMain(m *testing.M) {
 		fmt.Fprintf(os.Stderr, "%+v\n", err)
 		os.Exit(1)
 	}
-
-	admin, err := db.LoadAccountByUsername("admin")
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "%+v\n", err)
-		os.Exit(1)
-	}
-	password = admin.Password
 
 	ret := m.Run()
 
@@ -88,7 +84,7 @@ func runHTTPRequest(method string, auth bool, uriRef *url.URL, body io.Reader, t
 		return
 	}
 	if auth {
-		req.SetBasicAuth("admin", password)
+		req.SetBasicAuth("admin", adminPassword)
 	}
 	resp, err := client.Do(req)
 	if err != nil {

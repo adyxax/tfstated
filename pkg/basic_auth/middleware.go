@@ -27,7 +27,7 @@ func Middleware(db *database.DB) func(http.Handler) http.Handler {
 				http.Error(w, "Forbidden", http.StatusForbidden)
 				return
 			}
-			if password != account.Password {
+			if !account.CheckPassword(password) {
 				http.Error(w, "Forbidden", http.StatusForbidden)
 				return
 			}
