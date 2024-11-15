@@ -2,6 +2,7 @@ package database
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log/slog"
 	"time"
@@ -32,6 +33,9 @@ func (db *DB) LoadAccountByUsername(username string) (*model.Account, error) {
 		&account.Settings,
 	)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
 		return nil, err
 	}
 	password, err := db.dataEncryptionKey.DecryptAES256(encryptedPassword)

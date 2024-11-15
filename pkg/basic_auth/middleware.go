@@ -23,6 +23,10 @@ func Middleware(db *database.DB) func(http.Handler) http.Handler {
 				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 				return
 			}
+			if account == nil {
+				http.Error(w, "Forbidden", http.StatusForbidden)
+				return
+			}
 			if password != account.Password {
 				http.Error(w, "Forbidden", http.StatusForbidden)
 				return
