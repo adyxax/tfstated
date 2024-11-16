@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"time"
 
+	"git.adyxax.org/adyxax/tfstated/pkg/helpers"
 	"git.adyxax.org/adyxax/tfstated/pkg/model"
 	"go.n16f.net/uuid"
 )
@@ -69,8 +70,8 @@ func (db *DB) InitAdminAccount() error {
 		if err = password.Generate(uuid.V4); err != nil {
 			return fmt.Errorf("failed to generate initial admin password: %w", err)
 		}
-		salt := model.GenerateSalt()
-		hash := model.HashPassword(password.String(), salt)
+		salt := helpers.GenerateSalt()
+		hash := helpers.HashPassword(password.String(), salt)
 		if _, err = tx.ExecContext(db.ctx,
 			`INSERT INTO accounts(username, salt, password_hash, is_admin)
 		       VALUES ("admin", :salt, :hash, TRUE)

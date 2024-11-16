@@ -2,10 +2,12 @@ package basic_auth
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"time"
 
 	"git.adyxax.org/adyxax/tfstated/pkg/database"
+	"git.adyxax.org/adyxax/tfstated/pkg/helpers"
 	"git.adyxax.org/adyxax/tfstated/pkg/model"
 )
 
@@ -15,26 +17,22 @@ func Middleware(db *database.DB) func(http.Handler) http.Handler {
 			username, password, ok := r.BasicAuth()
 			if !ok {
 				w.Header().Set("WWW-Authenticate", `Basic realm="tfstated", charset="UTF-8"`)
-				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+				helpers.ErrorResponse(w, http.StatusUnauthorized, fmt.Errorf("Unauthorized"))
 				return
 			}
 			account, err := db.LoadAccountByUsername(username)
 			if err != nil {
-				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+				helpers.ErrorResponse(w, http.StatusInternalServerError, err)
 				return
 			}
-			if account == nil {
-				http.Error(w, "Forbidden", http.StatusForbidden)
-				return
-			}
-			if !account.CheckPassword(password) {
-				http.Error(w, "Forbidden", http.StatusForbidden)
+			if account == nil || !account.CheckPassword(password) {
+				helpers.ErrorResponse(w, http.StatusForbidden, fmt.Errorf("Forbidden"))
 				return
 			}
 			now := time.Now().UTC()
 			_, err = db.Exec(`UPDATE accounts SET last_login = ? WHERE id = ?`, now.Unix(), account.Id)
 			if err != nil {
-				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+				helpers.ErrorResponse(w, http.StatusInternalServerError, err)
 				return
 			}
 			ctx := context.WithValue(r.Context(), model.AccountContextKey{}, account)

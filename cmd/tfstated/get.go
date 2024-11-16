@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"git.adyxax.org/adyxax/tfstated/pkg/database"
+	"git.adyxax.org/adyxax/tfstated/pkg/helpers"
 )
 
 func handleGet(db *database.DB) http.Handler {
@@ -12,13 +13,13 @@ func handleGet(db *database.DB) http.Handler {
 		w.Header().Set("Cache-Control", "no-store, no-cache")
 
 		if r.URL.Path == "/" {
-			_ = errorResponse(w, http.StatusBadRequest,
+			helpers.ErrorResponse(w, http.StatusBadRequest,
 				fmt.Errorf("no state path provided, cannot GET /"))
 			return
 		}
 
 		if data, err := db.GetState(r.URL.Path); err != nil {
-			_ = errorResponse(w, http.StatusInternalServerError, err)
+			helpers.ErrorResponse(w, http.StatusInternalServerError, err)
 		} else {
 			w.WriteHeader(http.StatusOK)
 			_, _ = w.Write(data)
