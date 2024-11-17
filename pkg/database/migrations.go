@@ -1,6 +1,7 @@
 package database
 
 import (
+	"database/sql"
 	"embed"
 	"io/fs"
 
@@ -28,36 +29,23 @@ func (db *DB) migrate() error {
 		return err
 	}
 
-	tx, err := db.Begin()
-	if err != nil {
-		return err
-	}
-	defer func() {
-		if err != nil {
-			_ = tx.Rollback()
+	return db.WithTransaction(func(tx *sql.Tx) error {
+		var version int
+		if err = tx.QueryRowContext(db.ctx, `SELECT version FROM schema_version;`).Scan(&version); err != nil {
+			if err.Error() == "no such table: schema_version" {
+				version = 0
+			} else {
+				return err
+			}
 		}
-	}()
 
-	var version int
-	if err = tx.QueryRowContext(db.ctx, `SELECT version FROM schema_version;`).Scan(&version); err != nil {
-		if err.Error() == "no such table: schema_version" {
-			version = 0
-		} else {
-			return err
+		for version < len(statements) {
+			if _, err = tx.ExecContext(db.ctx, statements[version]); err != nil {
+				return err
+			}
+			version++
 		}
-	}
-
-	for version < len(statements) {
-		if _, err = tx.ExecContext(db.ctx, statements[version]); err != nil {
-			return err
-		}
-		version++
-	}
-	if _, err = tx.ExecContext(db.ctx, `DELETE FROM schema_version; INSERT INTO schema_version (version) VALUES (?);`, version); err != nil {
+		_, err = tx.ExecContext(db.ctx, `DELETE FROM schema_version; INSERT INTO schema_version (version) VALUES (?);`, version)
 		return err
-	}
-	if err = tx.Commit(); err != nil {
-		return err
-	}
-	return nil
+	})
 }
