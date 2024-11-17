@@ -50,42 +50,31 @@ func (db *DB) LoadAccountByUsername(username string) (*model.Account, error) {
 }
 
 func (db *DB) InitAdminAccount() error {
-	tx, err := db.Begin()
-	if err != nil {
-		return err
-	}
-	defer func() {
-		if err != nil {
-			_ = tx.Rollback()
+	return db.WithTransaction(func(tx *sql.Tx) error {
+		var hasAdminAccount bool
+		if err := tx.QueryRowContext(db.ctx, `SELECT EXISTS (SELECT 1 FROM accounts WHERE is_admin);`).Scan(&hasAdminAccount); err != nil {
+			return fmt.Errorf("failed to select if there is an admin account in the database: %w", err)
 		}
-	}()
-	var hasAdminAccount bool
-	if err = tx.QueryRowContext(db.ctx, `SELECT EXISTS (SELECT 1 FROM accounts WHERE is_admin);`).Scan(&hasAdminAccount); err != nil {
-		return fmt.Errorf("failed to select if there is an admin account in the database: %w", err)
-	}
-	if hasAdminAccount {
-		tx.Rollback()
-	} else {
-		var password uuid.UUID
-		if err = password.Generate(uuid.V4); err != nil {
-			return fmt.Errorf("failed to generate initial admin password: %w", err)
-		}
-		salt := helpers.GenerateSalt()
-		hash := helpers.HashPassword(password.String(), salt)
-		if _, err = tx.ExecContext(db.ctx,
-			`INSERT INTO accounts(username, salt, password_hash, is_admin)
+		if !hasAdminAccount {
+			var password uuid.UUID
+			if err := password.Generate(uuid.V4); err != nil {
+				return fmt.Errorf("failed to generate initial admin password: %w", err)
+			}
+			salt := helpers.GenerateSalt()
+			hash := helpers.HashPassword(password.String(), salt)
+			if _, err := tx.ExecContext(db.ctx,
+				`INSERT INTO accounts(username, salt, password_hash, is_admin)
 		       VALUES ("admin", :salt, :hash, TRUE)
 		       ON CONFLICT DO UPDATE SET password_hash = :hash
 		         WHERE username = "admin";`,
-			sql.Named("salt", salt),
-			sql.Named("hash", hash),
-		); err != nil {
-			return fmt.Errorf("failed to set initial admin password: %w", err)
+				sql.Named("salt", salt),
+				sql.Named("hash", hash),
+			); err == nil {
+				AdvertiseAdminPassword(password.String())
+			} else {
+				return fmt.Errorf("failed to set initial admin password: %w", err)
+			}
 		}
-		err = tx.Commit()
-		if err == nil {
-			AdvertiseAdminPassword(password.String())
-		}
-	}
-	return err
+		return nil
+	})
 }
