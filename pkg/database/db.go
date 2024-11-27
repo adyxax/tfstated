@@ -12,7 +12,7 @@ import (
 func initDB(ctx context.Context, url string) (*sql.DB, error) {
 	db, err := sql.Open("sqlite3", url)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to open database: %w", err)
 	}
 	defer func() {
 		if err != nil {
@@ -20,7 +20,7 @@ func initDB(ctx context.Context, url string) (*sql.DB, error) {
 		}
 	}()
 	if _, err = db.ExecContext(ctx, "PRAGMA busy_timeout = 5000"); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to set pragma: %w", err)
 	}
 
 	return db, nil
@@ -37,7 +37,7 @@ type DB struct {
 func NewDB(ctx context.Context, url string) (*DB, error) {
 	readDB, err := initDB(ctx, url)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to init read database connection: %w", err)
 	}
 	defer func() {
 		if err != nil {
@@ -48,7 +48,7 @@ func NewDB(ctx context.Context, url string) (*DB, error) {
 
 	writeDB, err := initDB(ctx, url)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to init write database connection: %w", err)
 	}
 	defer func() {
 		if err != nil {
@@ -63,20 +63,22 @@ func NewDB(ctx context.Context, url string) (*DB, error) {
 		versionsHistoryLimit: 64,
 		writeDB:              writeDB,
 	}
-	if _, err = db.Exec("PRAGMA foreign_keys = ON"); err != nil {
-		return nil, err
+	pragmas := []struct {
+		key   string
+		value string
+	}{
+		{"foreign_keys", "ON"},
+		{"cache_size", "10000000"},
+		{"journal_mode", "WAL"},
+		{"synchronous", "NORMAL"},
 	}
-	if _, err = db.Exec("PRAGMA cache_size = 10000000"); err != nil {
-		return nil, err
-	}
-	if _, err = db.Exec("PRAGMA journal_mode = WAL"); err != nil {
-		return nil, err
-	}
-	if _, err = db.Exec("PRAGMA synchronous = NORMAL"); err != nil {
-		return nil, err
+	for _, pragma := range pragmas {
+		if _, err = db.Exec(fmt.Sprintf("PRAGMA %s = %s", pragma.key, pragma.value)); err != nil {
+			return nil, fmt.Errorf("failed to set pragma: %w", err)
+		}
 	}
 	if err = db.migrate(); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to migrate: %w", err)
 	}
 
 	return &db, nil
@@ -85,6 +87,7 @@ func NewDB(ctx context.Context, url string) (*DB, error) {
 func (db *DB) Close() error {
 	if err := db.readDB.Close(); err != nil {
 		_ = db.writeDB.Close()
+		return fmt.Errorf("failed to close read database connection: %w", err)
 	}
 	return db.writeDB.Close()
 }
