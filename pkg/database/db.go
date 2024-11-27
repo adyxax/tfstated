@@ -108,15 +108,20 @@ func (db *DB) SetVersionsHistoryLimit(n int) {
 func (db *DB) WithTransaction(f func(tx *sql.Tx) error) error {
 	tx, err := db.writeDB.Begin()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
-	err = f(tx)
-	if err == nil {
-		err = tx.Commit()
-	}
-	if err != nil {
-		if err2 := tx.Rollback(); err2 != nil {
-			panic(fmt.Sprintf("failed to rollback transaction: %+v. Reason for rollback: %+v", err2, err))
+	defer func() {
+		if err != nil {
+			if err2 := tx.Rollback(); err2 != nil {
+				panic(fmt.Sprintf("failed to rollback transaction: %+v. Reason for rollback: %+v", err2, err))
+			}
+		}
+	}()
+	if err = f(tx); err != nil {
+		return fmt.Errorf("failed to execute function inside transaction: %w", err)
+	} else {
+		if err = tx.Commit(); err != nil {
+			err = fmt.Errorf("failed to commit transaction: %w", err)
 		}
 	}
 	return err
