@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"sync"
 	"testing"
 	"time"
 
@@ -20,6 +21,7 @@ var baseURI = url.URL{
 }
 var db *database.DB
 var adminPassword string
+var adminPasswordMutex sync.Mutex
 
 func TestMain(m *testing.M) {
 	ctx := context.Background()
@@ -47,6 +49,8 @@ func TestMain(m *testing.M) {
 	}
 
 	database.AdvertiseAdminPassword = func(password string) {
+		adminPasswordMutex.Lock()
+		defer adminPasswordMutex.Unlock()
 		adminPassword = password
 	}
 	go run(
@@ -84,6 +88,8 @@ func runHTTPRequest(method string, auth bool, uriRef *url.URL, body io.Reader, t
 		return
 	}
 	if auth {
+		adminPasswordMutex.Lock()
+		defer adminPasswordMutex.Unlock()
 		req.SetBasicAuth("admin", adminPassword)
 	}
 	resp, err := client.Do(req)
