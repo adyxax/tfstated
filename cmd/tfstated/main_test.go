@@ -24,18 +24,9 @@ var adminPassword string
 var adminPasswordMutex sync.Mutex
 
 func TestMain(m *testing.M) {
-	ctx := context.Background()
-	ctx, cancel := context.WithCancel(ctx)
 	config := Config{
 		Host: "127.0.0.1",
 		Port: "8081",
-	}
-	_ = os.Remove("./test.db")
-	var err error
-	db, err = database.NewDB(ctx, "./test.db")
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "%+v\n", err)
-		os.Exit(1)
 	}
 	getenv := func(key string) string {
 		switch key {
@@ -48,6 +39,15 @@ func TestMain(m *testing.M) {
 		}
 	}
 
+	ctx := context.Background()
+	ctx, cancel := context.WithCancel(ctx)
+	_ = os.Remove("./test.db")
+	var err error
+	db, err = database.NewDB(ctx, "./test.db", getenv)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%+v\n", err)
+		os.Exit(1)
+	}
 	database.AdvertiseAdminPassword = func(password string) {
 		adminPasswordMutex.Lock()
 		defer adminPasswordMutex.Unlock()
@@ -125,14 +125,13 @@ func waitForReady(
 		resp, err := client.Do(req)
 		if err != nil {
 			fmt.Printf("Error making request: %s\n", err.Error())
-			continue
+		} else {
+			_ = resp.Body.Close()
+			if resp.StatusCode == http.StatusOK {
+				fmt.Println("Endpoint is ready!")
+				return nil
+			}
 		}
-		if resp.StatusCode == http.StatusOK {
-			fmt.Println("Endpoint is ready!")
-			resp.Body.Close()
-			return nil
-		}
-		resp.Body.Close()
 
 		select {
 		case <-ctx.Done():

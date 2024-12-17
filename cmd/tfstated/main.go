@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"strconv"
 	"sync"
 	"time"
 
@@ -35,22 +34,6 @@ func run(
 ) error {
 	ctx, cancel := signal.NotifyContext(ctx, os.Interrupt)
 	defer cancel()
-
-	dataEncryptionKey := getenv("DATA_ENCRYPTION_KEY")
-	if dataEncryptionKey == "" {
-		return fmt.Errorf("the DATA_ENCRYPTION_KEY environment variable is not set")
-	}
-	if err := db.SetDataEncryptionKey(dataEncryptionKey); err != nil {
-		return err
-	}
-	versionsHistoryLimit := getenv("VERSIONS_HISTORY_LIMIT")
-	if versionsHistoryLimit != "" {
-		n, err := strconv.Atoi(versionsHistoryLimit)
-		if err != nil {
-			return fmt.Errorf("failed to parse the VERSIONS_HISTORY_LIMIT environment variable: %w", err)
-		}
-		db.SetVersionsHistoryLimit(n)
-	}
 
 	if err := db.InitAdminAccount(); err != nil {
 		return err
@@ -107,7 +90,7 @@ func main() {
 		Port: "8080",
 	}
 
-	db, err := database.NewDB(ctx, "./tfstate.db?_txlock=immediate")
+	db, err := database.NewDB(ctx, "./tfstate.db?_txlock=immediate", os.Getenv)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "database init error: %+v\n", err)
 		os.Exit(1)
