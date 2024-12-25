@@ -24,14 +24,14 @@ var adminPassword string
 var adminPasswordMutex sync.Mutex
 
 func TestMain(m *testing.M) {
-	config := Config{
-		Host: "127.0.0.1",
-		Port: "8081",
-	}
 	getenv := func(key string) string {
 		switch key {
 		case "DATA_ENCRYPTION_KEY":
 			return "hP3ZSCnY3LMgfTQjwTaGrhKwdA0yXMXIfv67OJnntqM="
+		case "TFSTATED_HOST":
+			return "127.0.0.1"
+		case "TFSTATED_PORT":
+			return "8081"
 		case "VERSIONS_HISTORY_LIMIT":
 			return "3"
 		default:
@@ -55,7 +55,6 @@ func TestMain(m *testing.M) {
 	}
 	go run(
 		ctx,
-		&config,
 		db,
 		getenv,
 		os.Stderr,

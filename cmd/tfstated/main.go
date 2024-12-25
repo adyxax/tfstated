@@ -17,14 +17,8 @@ import (
 	"git.adyxax.org/adyxax/tfstated/pkg/logger"
 )
 
-type Config struct {
-	Host string
-	Port string
-}
-
 func run(
 	ctx context.Context,
-	config *Config,
 	db *database.DB,
 	//args []string,
 	getenv func(string) string,
@@ -45,14 +39,23 @@ func run(
 		db,
 	)
 
+	host := getenv("TFSTATED_HOST")
+	if host == "" {
+		host = "127.0.0.1"
+	}
+	port := getenv("TFSTATED_PORT")
+	if port == "" {
+		port = "8080"
+	}
+
 	httpServer := &http.Server{
-		Addr:    net.JoinHostPort(config.Host, config.Port),
+		Addr:    net.JoinHostPort(host, port),
 		Handler: logger.Middleware(mux, false),
 	}
 	go func() {
 		log.Printf("listening on %s\n", httpServer.Addr)
 		if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			fmt.Fprintf(stderr, "error listening and serving: %+v\n", err)
+			_, _ = fmt.Fprintf(stderr, "error listening and serving: %+v\n", err)
 		}
 	}()
 	var wg sync.WaitGroup
@@ -64,7 +67,7 @@ func run(
 		shutdownCtx, cancel := context.WithTimeout(shutdownCtx, 10*time.Second)
 		defer cancel()
 		if err := httpServer.Shutdown(shutdownCtx); err != nil {
-			fmt.Fprintf(stderr, "error shutting down http server: %+v\n", err)
+			_, _ = fmt.Fprintf(stderr, "error shutting down http server: %+v\n", err)
 		}
 	}()
 	wg.Wait()
@@ -76,7 +79,7 @@ func main() {
 	ctx := context.Background()
 
 	var opts *slog.HandlerOptions
-	if os.Getenv("TFSTATE_DEBUG") != "" {
+	if os.Getenv("TFSTATED_DEBUG") != "" {
 		opts = &slog.HandlerOptions{
 			AddSource: true,
 			Level:     slog.LevelDebug,
@@ -85,12 +88,11 @@ func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, opts))
 	slog.SetDefault(logger)
 
-	config := Config{
-		Host: "0.0.0.0",
-		Port: "8080",
-	}
-
-	db, err := database.NewDB(ctx, "./tfstate.db?_txlock=immediate", os.Getenv)
+	db, err := database.NewDB(
+		ctx,
+		"./tfstate.db?_txlock=immediate",
+		os.Getenv,
+	)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "database init error: %+v\n", err)
 		os.Exit(1)
@@ -99,7 +101,6 @@ func main() {
 
 	if err := run(
 		ctx,
-		&config,
 		db,
 		//os.Args,
 		os.Getenv,
