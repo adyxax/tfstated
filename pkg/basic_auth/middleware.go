@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"time"
 
 	"git.adyxax.org/adyxax/tfstated/pkg/database"
 	"git.adyxax.org/adyxax/tfstated/pkg/helpers"
@@ -29,9 +28,7 @@ func Middleware(db *database.DB) func(http.Handler) http.Handler {
 				helpers.ErrorResponse(w, http.StatusForbidden, fmt.Errorf("Forbidden"))
 				return
 			}
-			now := time.Now().UTC()
-			_, err = db.Exec(`UPDATE accounts SET last_login = ? WHERE id = ?`, now.Unix(), account.Id)
-			if err != nil {
+			if err := db.TouchAccount(account); err != nil {
 				helpers.ErrorResponse(w, http.StatusInternalServerError, err)
 				return
 			}
