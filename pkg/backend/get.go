@@ -1,4 +1,4 @@
-package main
+package backend
 
 import (
 	"fmt"
@@ -8,21 +8,21 @@ import (
 	"git.adyxax.org/adyxax/tfstated/pkg/helpers"
 )
 
-func handleDelete(db *database.DB) http.Handler {
+func handleGet(db *database.DB) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Cache-Control", "no-store, no-cache")
+
 		if r.URL.Path == "/" {
 			helpers.ErrorResponse(w, http.StatusBadRequest,
-				fmt.Errorf("no state path provided, cannot DELETE /"))
+				fmt.Errorf("no state path provided, cannot GET /"))
 			return
 		}
 
-		if success, err := db.DeleteState(r.URL.Path); err != nil {
+		if data, err := db.GetState(r.URL.Path); err != nil {
 			helpers.ErrorResponse(w, http.StatusInternalServerError, err)
-		} else if success {
-			w.WriteHeader(http.StatusOK)
 		} else {
-			helpers.ErrorResponse(w, http.StatusNotFound,
-				fmt.Errorf("state path not found: %s", r.URL.Path))
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write(data)
 		}
 	})
 }
