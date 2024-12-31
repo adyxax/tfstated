@@ -30,17 +30,21 @@ func run(
 		return err
 	}
 
-	httpServer := backend.Run(ctx, db, getenv, stderr)
+	backend := backend.Run(ctx, db, getenv, stderr)
+
+	<-ctx.Done()
+	shutdownCtx := context.Background()
+	shutdownCtx, shutdownCancel := context.WithTimeout(shutdownCtx, 10*time.Second)
+	defer shutdownCancel()
+
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		<-ctx.Done()
-		shutdownCtx := context.Background()
-		shutdownCtx, cancel := context.WithTimeout(shutdownCtx, 10*time.Second)
-		defer cancel()
-		if err := httpServer.Shutdown(shutdownCtx); err != nil {
-			_, _ = fmt.Fprintf(stderr, "error shutting down http server: %+v\n", err)
+		if err := backend.Shutdown(shutdownCtx); err != nil {
+			slog.Error("error shutting down backend http server", "error", err)
+		}
+	}()
 		}
 	}()
 	wg.Wait()

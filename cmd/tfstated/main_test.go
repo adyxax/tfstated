@@ -15,7 +15,7 @@ import (
 )
 
 var baseURI = url.URL{
-	Host:   "127.0.0.1:8081",
+	Host:   "127.0.0.1:8082",
 	Path:   "/",
 	Scheme: "http",
 }
@@ -31,7 +31,7 @@ func TestMain(m *testing.M) {
 		case "TFSTATED_HOST":
 			return "127.0.0.1"
 		case "TFSTATED_PORT":
-			return "8081"
+			return "8082"
 		case "VERSIONS_HISTORY_LIMIT":
 			return "3"
 		default:
@@ -59,7 +59,7 @@ func TestMain(m *testing.M) {
 		getenv,
 		os.Stderr,
 	)
-	err = waitForReady(ctx, 5*time.Second, "http://127.0.0.1:8081/healthz")
+	err = waitForReady(ctx, 5*time.Second, "http://127.0.0.1:8082/healthz")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%+v\n", err)
 		os.Exit(1)

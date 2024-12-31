@@ -2,9 +2,8 @@ package backend
 
 import (
 	"context"
-	"fmt"
 	"io"
-	"log"
+	"log/slog"
 	"net"
 	"net/http"
 
@@ -41,9 +40,9 @@ func Run(
 		Handler: logger.Middleware(mux, false),
 	}
 	go func() {
-		log.Printf("listening on %s\n", httpServer.Addr)
+		slog.Info("backend http server listening", "address", httpServer.Addr)
 		if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			_, _ = fmt.Fprintf(stderr, "error listening and serving: %+v\n", err)
+			slog.Error("error listening and serving backend http server", "address", httpServer.Addr, "error", err)
 		}
 	}()
 
