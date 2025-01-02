@@ -2,7 +2,6 @@ package backend
 
 import (
 	"context"
-	"io"
 	"log/slog"
 	"net"
 	"net/http"
@@ -14,11 +13,7 @@ import (
 func Run(
 	ctx context.Context,
 	db *database.DB,
-	//args []string,
 	getenv func(string) string,
-	//stdin io.Reader,
-	//stdout io.Writer,
-	stderr io.Writer,
 ) *http.Server {
 	mux := http.NewServeMux()
 	addRoutes(

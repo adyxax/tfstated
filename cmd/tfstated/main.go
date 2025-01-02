@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"io"
 	"log/slog"
 	"os"
 	"os/signal"
@@ -12,16 +11,13 @@ import (
 
 	"git.adyxax.org/adyxax/tfstated/pkg/backend"
 	"git.adyxax.org/adyxax/tfstated/pkg/database"
+	"git.adyxax.org/adyxax/tfstated/pkg/webui"
 )
 
 func run(
 	ctx context.Context,
 	db *database.DB,
-	//args []string,
 	getenv func(string) string,
-	//stdin io.Reader,
-	//stdout io.Writer,
-	stderr io.Writer,
 ) error {
 	ctx, cancel := signal.NotifyContext(ctx, os.Interrupt)
 	defer cancel()
@@ -79,11 +75,7 @@ func main() {
 	if err := run(
 		ctx,
 		db,
-		//os.Args,
 		os.Getenv,
-		//os.Stdin,
-		//os.Stdout,
-		os.Stderr,
 	); err != nil {
 		fmt.Fprintf(os.Stderr, "%+v\n", err)
 		os.Exit(1)
