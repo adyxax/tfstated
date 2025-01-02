@@ -3,8 +3,8 @@ package backend
 import (
 	"net/http"
 
-	"git.adyxax.org/adyxax/tfstated/pkg/basic_auth"
 	"git.adyxax.org/adyxax/tfstated/pkg/database"
+	"git.adyxax.org/adyxax/tfstated/pkg/middlewares/basic_auth"
 )
 
 func addRoutes(

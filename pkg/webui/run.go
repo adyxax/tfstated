@@ -7,7 +7,7 @@ import (
 	"net/http"
 
 	"git.adyxax.org/adyxax/tfstated/pkg/database"
-	"git.adyxax.org/adyxax/tfstated/pkg/logger"
+	"git.adyxax.org/adyxax/tfstated/pkg/middlewares/logger"
 )
 
 func Run(
