@@ -26,7 +26,8 @@ func run(
 		return err
 	}
 
-	backend := backend.Run(ctx, db, getenv, stderr)
+	backend := backend.Run(ctx, db, getenv)
+	webui := webui.Run(ctx, db, getenv)
 
 	<-ctx.Done()
 	shutdownCtx := context.Background()
@@ -34,13 +35,17 @@ func run(
 	defer shutdownCancel()
 
 	var wg sync.WaitGroup
-	wg.Add(1)
+	wg.Add(2)
 	go func() {
 		defer wg.Done()
 		if err := backend.Shutdown(shutdownCtx); err != nil {
 			slog.Error("error shutting down backend http server", "error", err)
 		}
 	}()
+	go func() {
+		defer wg.Done()
+		if err := webui.Shutdown(shutdownCtx); err != nil {
+			slog.Error("error shutting down webui http server", "error", err)
 		}
 	}()
 	wg.Wait()
