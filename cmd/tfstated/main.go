@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/signal"
 	"sync"
+	"syscall"
 	"time"
 
 	"git.adyxax.org/adyxax/tfstated/pkg/backend"
@@ -19,7 +20,7 @@ func run(
 	db *database.DB,
 	getenv func(string) string,
 ) error {
-	ctx, cancel := signal.NotifyContext(ctx, os.Interrupt)
+	ctx, cancel := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
 	defer cancel()
 
 	if err := db.InitAdminAccount(); err != nil {
