@@ -47,6 +47,38 @@ func (db *DB) InitAdminAccount() error {
 	})
 }
 
+func (db *DB) LoadAccountById(id int) (*model.Account, error) {
+	account := model.Account{
+		Id: id,
+	}
+	var (
+		created   int64
+		lastLogin int64
+	)
+	err := db.QueryRow(
+		`SELECT username, salt, password_hash, is_admin, created, last_login, settings
+           FROM accounts
+           WHERE id = ?;`,
+		id,
+	).Scan(&account.Username,
+		&account.Salt,
+		&account.PasswordHash,
+		&account.IsAdmin,
+		&created,
+		&lastLogin,
+		&account.Settings,
+	)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("failed to load account by id %d: %w", id, err)
+	}
+	account.Created = time.Unix(created, 0)
+	account.LastLogin = time.Unix(lastLogin, 0)
+	return &account, nil
+}
+
 func (db *DB) LoadAccountByUsername(username string) (*model.Account, error) {
 	account := model.Account{
 		Username: username,
@@ -72,7 +104,7 @@ func (db *DB) LoadAccountByUsername(username string) (*model.Account, error) {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
 		}
-		return nil, err
+		return nil, fmt.Errorf("failed to load account by username %s: %w", username, err)
 	}
 	account.Created = time.Unix(created, 0)
 	account.LastLogin = time.Unix(lastLogin, 0)

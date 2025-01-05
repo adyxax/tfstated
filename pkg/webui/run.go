@@ -2,6 +2,7 @@ package webui
 
 import (
 	"context"
+	"embed"
 	"log/slog"
 	"net"
 	"net/http"
@@ -9,6 +10,12 @@ import (
 	"git.adyxax.org/adyxax/tfstated/pkg/database"
 	"git.adyxax.org/adyxax/tfstated/pkg/middlewares/logger"
 )
+
+//go:embed html/*
+var htmlFS embed.FS
+
+//go:embed static/*
+var staticFS embed.FS
 
 func Run(
 	ctx context.Context,

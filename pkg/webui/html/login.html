@@ -1,0 +1,29 @@
+{{ define "main" }}
+{{ if .Forbidden }}
+<article>
+  <p class="error-message">Invalid username or password</p>
+</article>
+{{ end }}
+<form action="/login" method="post">
+  <fieldset>
+	<label>
+      Username
+	  <input type="text"
+             placeholder="Username"
+             name="username"
+             value="{{ .Username }}"
+             {{ if .Forbidden }}aria-invalid="true"{{ end }}
+             required>
+    </label>
+	<label>
+      Password
+      <input type="password"
+             placeholder="Password"
+             name="password"
+             {{ if .Forbidden }}aria-invalid="true"{{ end }}
+             required>
+    </label>
+  </fieldset>
+  <button type="submit" value="login">Login</button>
+</form>
+{{ end }}

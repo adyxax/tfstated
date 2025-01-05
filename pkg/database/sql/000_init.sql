@@ -14,6 +14,15 @@ CREATE TABLE accounts (
 ) STRICT;
 CREATE UNIQUE INDEX accounts_username on accounts(username);
 
+CREATE TABLE sessions (
+  id TEXT PRIMARY KEY,
+  account_id INTEGER NOT NULL,
+  created INTEGER NOT NULL DEFAULT (unixepoch()),
+  updated INTEGER NOT NULL DEFAULT (unixepoch()),
+  data TEXT NOT NULL,
+  FOREIGN KEY(account_id) REFERENCES accounts(id) ON DELETE CASCADE
+) STRICT;
+
 CREATE TABLE states (
   id INTEGER PRIMARY KEY,
   path TEXT NOT NULL,
