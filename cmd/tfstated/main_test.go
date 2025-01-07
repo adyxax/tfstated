@@ -57,7 +57,6 @@ func TestMain(m *testing.M) {
 		ctx,
 		db,
 		getenv,
-		os.Stderr,
 	)
 	err = waitForReady(ctx, 5*time.Second, "http://127.0.0.1:8082/healthz")
 	if err != nil {
