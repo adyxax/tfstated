@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"slices"
+	"time"
 )
 
 // returns true in case of successful deletion
@@ -46,7 +47,7 @@ func (db *DB) GetState(path string) ([]byte, error) {
 func (db *DB) SetState(path string, accountID int, data []byte, lockID string) (bool, error) {
 	encryptedData, err := db.dataEncryptionKey.EncryptAES256(data)
 	if err != nil {
-		return false, err
+		return false, fmt.Errorf("failed to encrypt state data: %w", err)
 	}
 	ret := false
 	return ret, db.WithTransaction(func(tx *sql.Tx) error {
@@ -59,11 +60,11 @@ func (db *DB) SetState(path string, accountID int, data []byte, lockID string) (
 				var result sql.Result
 				result, err = tx.ExecContext(db.ctx, `INSERT INTO states(path) VALUES (?)`, path)
 				if err != nil {
-					return err
+					return fmt.Errorf("failed to insert new state: %w", err)
 				}
 				stateID, err = result.LastInsertId()
 				if err != nil {
-					return err
+					return fmt.Errorf("failed to get last insert id for new state: %w", err)
 				}
 			} else {
 				return err
@@ -84,7 +85,14 @@ func (db *DB) SetState(path string, accountID int, data []byte, lockID string) (
 			sql.Named("stateID", stateID),
 			sql.Named("data", encryptedData))
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to insert new state version: %w", err)
+		}
+		_, err = tx.ExecContext(db.ctx,
+			`UPDATE states SET updated = ? WHERE id = ?;`,
+			time.Now().UTC().Unix(),
+			stateID)
+		if err != nil {
+			return fmt.Errorf("failed to touch updated for state: %w", err)
 		}
 		_, err = tx.ExecContext(db.ctx,
 			`DELETE FROM versions

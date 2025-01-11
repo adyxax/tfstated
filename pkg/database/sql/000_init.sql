@@ -26,7 +26,9 @@ CREATE TABLE sessions (
 CREATE TABLE states (
   id INTEGER PRIMARY KEY,
   path TEXT NOT NULL,
-  lock TEXT
+  lock TEXT,
+  created INTEGER DEFAULT (unixepoch()),
+  updated INTEGER DEFAULT (unixepoch())
 ) STRICT;
 CREATE UNIQUE INDEX states_path on states(path);
 
