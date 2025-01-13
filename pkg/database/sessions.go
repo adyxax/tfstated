@@ -27,6 +27,14 @@ func (db *DB) CreateSession(account *model.Account) (string, error) {
 	return sessionId.String(), nil
 }
 
+func (db *DB) DeleteSession(session *model.Session) error {
+	_, err := db.Exec(`DELETE FROM sessions WHERE id = ?`, session.Id)
+	if err != nil {
+		return fmt.Errorf("failed to delete session %s: %w", session.Id, err)
+	}
+	return nil
+}
+
 func (db *DB) LoadSessionById(id string) (*model.Session, error) {
 	session := model.Session{
 		Id: id,

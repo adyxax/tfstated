@@ -22,16 +22,7 @@ func sessionsMiddleware(db *database.DB) func(http.Handler) http.Handler {
 			}
 			if err == nil {
 				if len(cookie.Value) != 36 {
-					http.SetCookie(w, &http.Cookie{
-						Name:     cookieName,
-						Value:    "",
-						Quoted:   false,
-						Path:     "/",
-						MaxAge:   0, // remove invalid cookie
-						HttpOnly: true,
-						SameSite: http.SameSiteStrictMode,
-						Secure:   true,
-					})
+					unsetSesssionCookie(w)
 				} else {
 					session, err := db.LoadSessionById(cookie.Value)
 					if err != nil {
@@ -52,4 +43,17 @@ func sessionsMiddleware(db *database.DB) func(http.Handler) http.Handler {
 			next.ServeHTTP(w, r)
 		})
 	}
+}
+
+func unsetSesssionCookie(w http.ResponseWriter) {
+	http.SetCookie(w, &http.Cookie{
+		Name:     cookieName,
+		Value:    "",
+		Quoted:   false,
+		Path:     "/",
+		MaxAge:   0, // remove invalid cookie
+		HttpOnly: true,
+		SameSite: http.SameSiteStrictMode,
+		Secure:   true,
+	})
 }
