@@ -24,7 +24,7 @@ func handleLoginGET() http.Handler {
 
 		session := r.Context().Value(model.SessionContextKey{})
 		if session != nil {
-			http.Redirect(w, r, "/", http.StatusFound)
+			http.Redirect(w, r, "/states", http.StatusFound)
 			return
 		}
 

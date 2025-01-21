@@ -111,6 +111,10 @@ func (db *DB) Exec(query string, args ...any) (sql.Result, error) {
 	return db.writeDB.ExecContext(db.ctx, query, args...)
 }
 
+func (db *DB) Query(query string, args ...any) (*sql.Rows, error) {
+	return db.readDB.QueryContext(db.ctx, query, args...)
+}
+
 func (db *DB) QueryRow(query string, args ...any) *sql.Row {
 	return db.readDB.QueryRowContext(db.ctx, query, args...)
 }

@@ -1,16 +1,16 @@
 package webui
 
 import (
-	"html/template"
+	"fmt"
 	"net/http"
 )
 
-var indexTemplates = template.Must(template.ParseFS(htmlFS, "html/base.html", "html/index.html"))
-
 func handleIndexGET() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Cache-Control", "no-store, no-cache")
-
-		render(w, indexTemplates, http.StatusOK, nil)
+		if r.URL.Path == "/" {
+			http.Redirect(w, r, "/states", http.StatusFound)
+		} else {
+			errorResponse(w, http.StatusNotFound, fmt.Errorf("Page not found"))
+		}
 	})
 }
