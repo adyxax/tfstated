@@ -11,6 +11,9 @@ import (
 var logoutTemplate = template.Must(template.ParseFS(htmlFS, "html/base.html", "html/logout.html"))
 
 func handleLogoutGET(db *database.DB) http.Handler {
+	type logoutPage struct {
+		Page
+	}
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		session := r.Context().Value(model.SessionContextKey{})
 		err := db.DeleteSession(session.(*model.Session))
@@ -19,6 +22,8 @@ func handleLogoutGET(db *database.DB) http.Handler {
 			return
 		}
 		unsetSesssionCookie(w)
-		render(w, logoutTemplate, http.StatusOK, nil)
+		render(w, logoutTemplate, http.StatusOK, logoutPage{
+			Page: Page{Title: "Logout", Section: "login"},
+		})
 	})
 }

@@ -1,29 +1,26 @@
 {{ define "main" }}
-{{ if .Forbidden }}
-<article>
-  <p class="error-message">Invalid username or password</p>
-</article>
-{{ end }}
-<form action="/login" method="post">
-  <fieldset>
-	<label>
-      Username
-	  <input type="text"
-             placeholder="Username"
-             name="username"
-             value="{{ .Username }}"
-             {{ if .Forbidden }}aria-invalid="true"{{ end }}
-             required>
-    </label>
-	<label>
-      Password
-      <input type="password"
-             placeholder="Password"
-             name="password"
-             {{ if .Forbidden }}aria-invalid="true"{{ end }}
-             required>
-    </label>
-  </fieldset>
-  <button type="submit" value="login">Login</button>
-</form>
+<main class="responsive">
+  <form action="/login" method="post">
+    <fieldset>
+      <div class="field border label{{ if .Forbidden }} invalid{{ end}}">
+        <input id="username"
+               name="username"
+               type="text"
+               value="{{ .Username }}"
+               required>
+        <label for="username">Username</label>
+        {{ if .Forbidden }}<span class="error">Invalid username or password</span>{{ end }}
+      </div>
+      <div class="field border label{{ if .Forbidden }} invalid{{ end}}">
+        <input id="password"
+               name="password"
+               type="password"
+               required>
+        <label for="password">Password</label>
+        {{ if .Forbidden }}<span class="error">Invalid username or password</span>{{ end }}
+      </div>
+      <button class="small-round" type="submit" value="login">Login</button>
+    </fieldset>
+  </form>
+</main>
 {{ end }}

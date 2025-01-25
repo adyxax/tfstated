@@ -1,3 +1,9 @@
-.error-message {
-    color:red;
+.clickable-rows tbody a {
+    display: block;
+    padding: 0 1em 0;
+    text-decoration: none;
+    transition: all 0.25s ease-out;
+}
+.clickable-rows tbody tr:hover a {
+    background-color: var(--secondary-container);
 }

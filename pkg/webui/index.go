@@ -5,6 +5,11 @@ import (
 	"net/http"
 )
 
+type Page struct {
+	Section string
+	Title   string
+}
+
 func handleIndexGET() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/" {

@@ -1,23 +1,32 @@
 {{ define "main" }}
-<h1>States</h1>
-<table class="striped">
-  <thead>
-    <tr>
-      <th scope="col">Path</th>
-      <th scope="col">Created</th>
-      <th scope="col">Updated</th>
-      <th scope="col">Locked</th>
-    </tr>
-  </thead>
-  <tbody>
-    {{ range .States }}
-    <tr>
-      <th scope="row">{{ .Path }}</th>
-      <td>{{ .Created }}</td>
-      <td>{{ .Updated }}</td>
-      <td>{{ .Lock }}</td>
-    </tr>
-    {{ end }}
-  </tbody>
-</table>
+<main class="responsive" id="main">
+  <table class="clickable-rows no-space stripes">
+    <thead>
+      <tr>
+        <th>Path</th>
+        <th>Updated</th>
+        <th>Locked</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{ range .States }}
+      <tr>
+        <td><a href="/state/{{ .Id }}">{{ .Path }}</a></td>
+        <td><a href="/state/{{ .Id }}">{{ .Updated }}</a></td>
+        <td>
+          <a href="/state/{{ .Id }}">
+            {{ if eq .Lock nil }}no{{ else }}
+            <span>yes</span>
+            <div class="tooltip left max">
+              <b>Lock</b>
+              <p>{{ .Lock }}</p>
+            </div>
+            {{ end }}
+          </a>
+        </td>
+      </tr>
+      {{ end }}
+    </tbody>
+  </table>
+</main>
 {{ end }}
