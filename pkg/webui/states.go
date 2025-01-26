@@ -16,8 +16,6 @@ func handleStatesGET(db *database.DB) http.Handler {
 		States []model.State
 	}
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Cache-Control", "no-store, no-cache")
-
 		states, err := db.LoadStatesByPath()
 		if err != nil {
 			errorResponse(w, http.StatusInternalServerError, err)
