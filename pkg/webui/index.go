@@ -6,8 +6,9 @@ import (
 )
 
 type Page struct {
-	Section string
-	Title   string
+	Precedent string
+	Section   string
+	Title     string
 }
 
 func handleIndexGET() http.Handler {

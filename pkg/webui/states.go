@@ -16,7 +16,7 @@ func handleStatesGET(db *database.DB) http.Handler {
 		States []model.State
 	}
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		states, err := db.LoadStatesByPath()
+		states, err := db.LoadStates()
 		if err != nil {
 			errorResponse(w, http.StatusInternalServerError, err)
 			return

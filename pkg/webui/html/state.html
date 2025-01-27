@@ -1,0 +1,30 @@
+{{ define "main" }}
+<main class="responsive" id="main">
+  <p>
+    Locked:
+    {{ if eq .State.Lock nil }}no{{ else }}
+    <span>yes</span>
+    <div class="tooltip left max">
+      <b>Lock</b>
+      <p>{{ .State.Lock }}</p>
+    </div>
+    {{ end }}
+  </p>
+  <table class="clickable-rows no-space">
+    <thead>
+      <tr>
+        <th>By</th>
+        <th>Created</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{ range .Versions }}
+      <tr>
+        <td><a href="/version/{{ .Id }}">{{ index $.Usernames .AccountId }}</a></td>
+        <td><a href="/version/{{ .Id }}">{{ .Created }}</a></td>
+      </tr>
+      {{ end }}
+    </tbody>
+  </table>
+</main>
+{{ end }}

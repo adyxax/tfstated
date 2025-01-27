@@ -12,11 +12,10 @@
   <span>Login</span>
 </a>
 {{ else }}
-<a href="/states"{{ if eq .Page.Section "states" }} class="active"{{ end}}>
+<a href="/states"{{ if eq .Page.Section "states" }} class="fill"{{ end}}>
   <i>home_storage</i>
   <span>States</span>
 </a>
-<hr>
 <a href="/logout">
   <i>logout</i>
   <span>Logout</span>
@@ -39,6 +38,11 @@
     <nav class="bottom s">{{ template "nav" . }}</nav>
     <header>
       <nav>
+        {{ if ne .Page.Precedent "" }}
+        <a href="{{ .Page.Precedent }}" class="button circle chip">
+            <i>arrow_back</i>
+          </a>
+        {{ end }}
         <h5 class="max center-align">{{ .Page.Title }}</h5>
       </nav>
     </header>

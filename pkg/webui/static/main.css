@@ -1,6 +1,5 @@
-.clickable-rows tbody a {
+table tbody a {
     display: block;
-    padding: 0 1em 0;
     text-decoration: none;
     transition: all 0.25s ease-out;
 }

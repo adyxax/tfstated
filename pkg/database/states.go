@@ -45,7 +45,29 @@ func (db *DB) GetState(path string) ([]byte, error) {
 	return db.dataEncryptionKey.DecryptAES256(encryptedData)
 }
 
-func (db *DB) LoadStatesByPath() ([]model.State, error) {
+func (db *DB) LoadStateById(stateId int) (*model.State, error) {
+	state := model.State{
+		Id: stateId,
+	}
+	var (
+		created int64
+		updated int64
+	)
+	err := db.QueryRow(
+		`SELECT created, lock, path, updated FROM states WHERE id = ?;`,
+		stateId).Scan(&created, &state.Lock, &state.Path, &updated)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("failed to load state id %s from database: %w", stateId, err)
+	}
+	state.Created = time.Unix(created, 0)
+	state.Updated = time.Unix(updated, 0)
+	return &state, nil
+}
+
+func (db *DB) LoadStates() ([]model.State, error) {
 	rows, err := db.Query(
 		`SELECT created, id, lock, path, updated FROM states;`)
 	if err != nil {
@@ -61,7 +83,7 @@ func (db *DB) LoadStatesByPath() ([]model.State, error) {
 		)
 		err = rows.Scan(&created, &state.Id, &state.Lock, &state.Path, &updated)
 		if err != nil {
-			return nil, fmt.Errorf("failed to load states from row: %w", err)
+			return nil, fmt.Errorf("failed to load state from row: %w", err)
 		}
 		state.Created = time.Unix(created, 0)
 		state.Updated = time.Unix(updated, 0)
