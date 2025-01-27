@@ -1,11 +1,43 @@
 package database
 
 import (
+	"database/sql"
+	"errors"
 	"fmt"
 	"time"
 
 	"git.adyxax.org/adyxax/tfstated/pkg/model"
 )
+
+func (db *DB) LoadVersionById(id int) (*model.Version, error) {
+	version := model.Version{
+		Id: id,
+	}
+	var (
+		created       int64
+		encryptedData []byte
+	)
+	err := db.QueryRow(
+		`SELECT account_id, state_id, data, lock, created FROM versions WHERE id = ?;`,
+		id).Scan(
+		&version.AccountId,
+		&version.StateId,
+		&encryptedData,
+		&version.Lock,
+		&created)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("failed to load version id %d from database: %w", id, err)
+	}
+	version.Created = time.Unix(created, 0)
+	version.Data, err = db.dataEncryptionKey.DecryptAES256(encryptedData)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decrypt version %d data: %w", id, err)
+	}
+	return &version, nil
+}
 
 func (db *DB) LoadVersionsByState(state *model.State) ([]model.Version, error) {
 	rows, err := db.Query(

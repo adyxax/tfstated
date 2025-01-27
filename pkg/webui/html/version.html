@@ -1,0 +1,10 @@
+{{ define "main" }}
+<main class="responsive" id="main">
+  <p>
+    Created by
+    <a href="/users/{{ .Account.Id }}">{{ .Account.Username }}</a>
+    at {{ .Version.Created }}
+  </p>
+  <pre>{{ .VersionData }}</pre>
+</main>
+{{ end }}
