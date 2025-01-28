@@ -29,7 +29,9 @@ func sessionsMiddleware(db *database.DB) func(http.Handler) http.Handler {
 						errorResponse(w, http.StatusInternalServerError, err)
 						return
 					}
-					if !session.IsExpired() {
+					if session == nil {
+						unsetSesssionCookie(w)
+					} else if !session.IsExpired() {
 						if err := db.TouchSession(cookie.Value); err != nil {
 							errorResponse(w, http.StatusInternalServerError, err)
 							return
