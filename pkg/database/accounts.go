@@ -2,6 +2,7 @@ package database
 
 import (
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -31,12 +32,13 @@ func (db *DB) InitAdminAccount() error {
 			salt := helpers.GenerateSalt()
 			hash := helpers.HashPassword(password.String(), salt)
 			if _, err := tx.ExecContext(db.ctx,
-				`INSERT INTO accounts(username, salt, password_hash, is_admin)
-		       VALUES ("admin", :salt, :hash, TRUE)
+				`INSERT INTO accounts(username, salt, password_hash, is_admin, settings)
+		       VALUES ("admin", :salt, :hash, TRUE, :settings)
 		       ON CONFLICT DO UPDATE SET password_hash = :hash
 		         WHERE username = "admin";`,
 				sql.Named("salt", salt),
 				sql.Named("hash", hash),
+				[]byte("{}"),
 			); err == nil {
 				AdvertiseAdminPassword(password.String())
 			} else {
@@ -134,6 +136,18 @@ func (db *DB) LoadAccountByUsername(username string) (*model.Account, error) {
 	account.Created = time.Unix(created, 0)
 	account.LastLogin = time.Unix(lastLogin, 0)
 	return &account, nil
+}
+
+func (db *DB) SaveAccountSettings(account *model.Account, settings *model.Settings) error {
+	data, err := json.Marshal(settings)
+	if err != nil {
+		return fmt.Errorf("failed to marshal settings for user %s: %w", account.Username, err)
+	}
+	_, err = db.Exec(`UPDATE accounts SET settings = ? WHERE id = ?`, data, account.Id)
+	if err != nil {
+		return fmt.Errorf("failed to update settings for user %s: %w", account.Username, err)
+	}
+	return nil
 }
 
 func (db *DB) TouchAccount(account *model.Account) error {

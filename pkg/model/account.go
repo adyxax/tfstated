@@ -2,6 +2,7 @@ package model
 
 import (
 	"crypto/subtle"
+	"encoding/json"
 	"time"
 
 	"git.adyxax.org/adyxax/tfstated/pkg/helpers"
@@ -17,7 +18,7 @@ type Account struct {
 	IsAdmin      bool
 	Created      time.Time
 	LastLogin    time.Time
-	Settings     any
+	Settings     json.RawMessage
 }
 
 func (account *Account) CheckPassword(password string) bool {

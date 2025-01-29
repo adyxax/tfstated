@@ -13,7 +13,7 @@ var stateTemplate = template.Must(template.ParseFS(htmlFS, "html/base.html", "ht
 
 func handleStateGET(db *database.DB) http.Handler {
 	type StatesData struct {
-		Page
+		Page      *Page
 		State     *model.State
 		Usernames map[int]string
 		Versions  []model.Version
@@ -41,11 +41,11 @@ func handleStateGET(db *database.DB) http.Handler {
 			return
 		}
 		render(w, stateTemplate, http.StatusOK, StatesData{
-			Page: Page{
+			Page: makePage(r, &Page{
 				Precedent: "/states",
 				Section:   "states",
 				Title:     state.Path,
-			},
+			}),
 			State:     state,
 			Usernames: usernames,
 			Versions:  versions,

@@ -14,7 +14,7 @@ var versionTemplate = template.Must(template.ParseFS(htmlFS, "html/base.html", "
 
 func handleVersionGET(db *database.DB) http.Handler {
 	type VersionsData struct {
-		Page
+		Page        *Page
 		Account     *model.Account
 		State       *model.State
 		Version     *model.Version
@@ -44,11 +44,11 @@ func handleVersionGET(db *database.DB) http.Handler {
 		}
 		versionData := string(version.Data[:])
 		render(w, versionTemplate, http.StatusOK, VersionsData{
-			Page: Page{
+			Page: makePage(r, &Page{
 				Precedent: fmt.Sprintf("/state/%d", state.Id),
-				Section:   "versions",
+				Section:   "states",
 				Title:     state.Path,
-			},
+			}),
 			Account:     account,
 			State:       state,
 			Version:     version,

@@ -1,0 +1,25 @@
+{{ define "main" }}
+<main class="responsive">
+  <form action="/settings" method="post">
+    <fieldset>
+      <div class="field middle-align">
+        <nav>
+          <div class="max">
+            <h6>Dark Mode</h6>
+          </div>
+          <label class="switch icon">
+            <input {{ if not .Settings.LightMode }} checked{{ end }}
+                   name="dark-mode"
+                   type="checkbox"
+                   value="1" />
+            <span>
+              <i>dark_mode</i>
+            </span>
+          </label>
+        </nav>
+      </div>
+      <button class="small-round" type="submit" value="login">Save</button>
+    </fieldset>
+  </form>
+</main>
+{{ end }}

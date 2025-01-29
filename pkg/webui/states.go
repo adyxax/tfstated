@@ -12,7 +12,7 @@ var statesTemplates = template.Must(template.ParseFS(htmlFS, "html/base.html", "
 
 func handleStatesGET(db *database.DB) http.Handler {
 	type StatesData struct {
-		Page
+		Page   *Page
 		States []model.State
 	}
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -22,7 +22,7 @@ func handleStatesGET(db *database.DB) http.Handler {
 			return
 		}
 		render(w, statesTemplates, http.StatusOK, StatesData{
-			Page:   Page{Title: "States", Section: "states"},
+			Page:   makePage(r, &Page{Title: "States", Section: "states"}),
 			States: states,
 		})
 	})

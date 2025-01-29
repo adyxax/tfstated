@@ -2,8 +2,10 @@ package webui
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"html/template"
+	"log/slog"
 	"net/http"
 	"regexp"
 
@@ -113,6 +115,11 @@ func loginMiddleware(db *database.DB, requireSession func(http.Handler) http.Han
 				return
 			}
 			ctx := context.WithValue(r.Context(), model.AccountContextKey{}, account)
+			var settings model.Settings
+			if err := json.Unmarshal(account.Settings, &settings); err != nil {
+				slog.Error("failed to unmarshal account settings", "err", err, "accountId", account.Id)
+			}
+			ctx = context.WithValue(ctx, model.SettingsContextKey{}, &settings)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		}))
 	}

@@ -10,7 +10,7 @@ CREATE TABLE accounts (
   is_admin INTEGER NOT NULL DEFAULT FALSE,
   created INTEGER NOT NULL DEFAULT (unixepoch()),
   last_login INTEGER NOT NULL DEFAULT (unixepoch()),
-  settings TEXT
+  settings BLOB NOT NULL
 ) STRICT;
 CREATE UNIQUE INDEX accounts_username on accounts(username);
 

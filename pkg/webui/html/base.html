@@ -16,6 +16,10 @@
   <i>home_storage</i>
   <span>States</span>
 </a>
+<a href="/settings"{{ if eq .Page.Section "settings" }} class="fill"{{ end}}>
+  <i>settings</i>
+  <span>Settings</span>
+</a>
 <a href="/logout">
   <i>logout</i>
   <span>Logout</span>
@@ -32,7 +36,7 @@
     <link href="https://cdn.jsdelivr.net/npm/beercss@3.8.0/dist/cdn/beer.min.css" rel="stylesheet">
     <title>TFSTATED - {{ .Page.Title }}</title>
   </head>
-  <body class="dark">
+  <body class="{{ if .Page.LightMode }}light{{ else }}dark{{ end }}">
     <nav class="left drawer l">{{ template "nav" . }}</nav>
     <nav class="left m">{{ template "nav" . }}</nav>
     <nav class="bottom s">{{ template "nav" . }}</nav>
