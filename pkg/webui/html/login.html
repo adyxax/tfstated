@@ -3,7 +3,8 @@
   <form action="/login" method="post">
     <fieldset>
       <div class="field border label{{ if .Forbidden }} invalid{{ end}}">
-        <input id="username"
+        <input autofocus
+               id="username"
                name="username"
                type="text"
                value="{{ .Username }}"

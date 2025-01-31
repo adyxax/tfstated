@@ -11,7 +11,7 @@ import (
 type AccountContextKey struct{}
 
 type Account struct {
-	Id           int
+	Id           string
 	Username     string
 	Salt         []byte
 	PasswordHash []byte

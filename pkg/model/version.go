@@ -1,13 +1,14 @@
 package model
 
 import (
+	"encoding/json"
 	"time"
 )
 
 type Version struct {
-	AccountId int
+	AccountId string
 	Created   time.Time
-	Data      []byte
+	Data      json.RawMessage
 	Id        int
 	Lock      *string
 	StateId   int

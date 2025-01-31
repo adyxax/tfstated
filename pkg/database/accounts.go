@@ -25,6 +25,10 @@ func (db *DB) InitAdminAccount() error {
 			return fmt.Errorf("failed to select if there is an admin account in the database: %w", err)
 		}
 		if !hasAdminAccount {
+			var accountId uuid.UUID
+			if err := accountId.Generate(uuid.V7); err != nil {
+				return fmt.Errorf("failed to generate account id: %w", err)
+			}
 			var password uuid.UUID
 			if err := password.Generate(uuid.V4); err != nil {
 				return fmt.Errorf("failed to generate initial admin password: %w", err)
@@ -32,13 +36,14 @@ func (db *DB) InitAdminAccount() error {
 			salt := helpers.GenerateSalt()
 			hash := helpers.HashPassword(password.String(), salt)
 			if _, err := tx.ExecContext(db.ctx,
-				`INSERT INTO accounts(username, salt, password_hash, is_admin, settings)
-		       VALUES ("admin", :salt, :hash, TRUE, :settings)
+				`INSERT INTO accounts(id, username, salt, password_hash, is_admin, settings)
+		       VALUES (:id, "admin", :salt, :hash, TRUE, :settings)
 		       ON CONFLICT DO UPDATE SET password_hash = :hash
 		         WHERE username = "admin";`,
-				sql.Named("salt", salt),
+				sql.Named("id", accountId),
 				sql.Named("hash", hash),
-				[]byte("{}"),
+				sql.Named("salt", salt),
+				sql.Named("settings", []byte("{}")),
 			); err == nil {
 				AdvertiseAdminPassword(password.String())
 			} else {
@@ -49,17 +54,17 @@ func (db *DB) InitAdminAccount() error {
 	})
 }
 
-func (db *DB) LoadAccountUsernames() (map[int]string, error) {
+func (db *DB) LoadAccountUsernames() (map[string]string, error) {
 	rows, err := db.Query(
 		`SELECT id, username FROM accounts;`)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load accounts from database: %w", err)
 	}
 	defer rows.Close()
-	accounts := make(map[int]string)
+	accounts := make(map[string]string)
 	for rows.Next() {
 		var (
-			id       int
+			id       string
 			username string
 		)
 		err = rows.Scan(&id, &username)
@@ -74,7 +79,7 @@ func (db *DB) LoadAccountUsernames() (map[int]string, error) {
 	return accounts, nil
 }
 
-func (db *DB) LoadAccountById(id int) (*model.Account, error) {
+func (db *DB) LoadAccountById(id string) (*model.Account, error) {
 	account := model.Account{
 		Id: id,
 	}
@@ -99,7 +104,7 @@ func (db *DB) LoadAccountById(id int) (*model.Account, error) {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
 		}
-		return nil, fmt.Errorf("failed to load account by id %d: %w", id, err)
+		return nil, fmt.Errorf("failed to load account by id %s: %w", id, err)
 	}
 	account.Created = time.Unix(created, 0)
 	account.LastLogin = time.Unix(lastLogin, 0)

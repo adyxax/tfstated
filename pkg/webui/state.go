@@ -15,7 +15,7 @@ func handleStateGET(db *database.DB) http.Handler {
 	type StatesData struct {
 		Page      *Page
 		State     *model.State
-		Usernames map[int]string
+		Usernames map[string]string
 		Versions  []model.Version
 	}
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

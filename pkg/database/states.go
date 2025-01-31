@@ -60,7 +60,7 @@ func (db *DB) LoadStateById(stateId int) (*model.State, error) {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
 		}
-		return nil, fmt.Errorf("failed to load state id %s from database: %w", stateId, err)
+		return nil, fmt.Errorf("failed to load state id %d from database: %w", stateId, err)
 	}
 	state.Created = time.Unix(created, 0)
 	state.Updated = time.Unix(updated, 0)
@@ -96,7 +96,7 @@ func (db *DB) LoadStates() ([]model.State, error) {
 }
 
 // returns true in case of id mismatch
-func (db *DB) SetState(path string, accountID int, data []byte, lockID string) (bool, error) {
+func (db *DB) SetState(path string, accountID string, data []byte, lockID string) (bool, error) {
 	encryptedData, err := db.dataEncryptionKey.EncryptAES256(data)
 	if err != nil {
 		return false, fmt.Errorf("failed to encrypt state data: %w", err)

@@ -8,7 +8,7 @@ type SessionContextKey struct{}
 
 type Session struct {
 	Id        string
-	AccountId int
+	AccountId string
 	Created   time.Time
 	Updated   time.Time
 	Data      any
