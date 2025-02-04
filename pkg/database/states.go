@@ -8,7 +8,51 @@ import (
 	"time"
 
 	"git.adyxax.org/adyxax/tfstated/pkg/model"
+	"github.com/mattn/go-sqlite3"
 )
+
+func (db *DB) CreateState(path string, accountId string, data []byte) (*model.Version, error) {
+	encryptedData, err := db.dataEncryptionKey.EncryptAES256(data)
+	if err != nil {
+		return nil, fmt.Errorf("failed to encrypt state data: %w", err)
+	}
+	version := &model.Version{
+		AccountId: accountId,
+	}
+	return version, db.WithTransaction(func(tx *sql.Tx) error {
+		result, err := tx.ExecContext(db.ctx, `INSERT INTO states(path) VALUES (?)`, path)
+		if err != nil {
+			var sqliteErr sqlite3.Error
+			if errors.As(err, &sqliteErr) {
+				if sqliteErr.Code == sqlite3.ErrNo(sqlite3.ErrConstraint) {
+					version = nil
+					return nil
+				}
+			}
+			return fmt.Errorf("failed to insert new state: %w", err)
+		}
+		stateId, err := result.LastInsertId()
+		if err != nil {
+			return fmt.Errorf("failed to get last insert id for new state: %w", err)
+		}
+		version.StateId = int(stateId)
+		result, err = tx.ExecContext(db.ctx,
+			`INSERT INTO versions(account_id, data, state_id)
+               VALUES (:accountID, :data, :stateID)`,
+			sql.Named("accountID", accountId),
+			sql.Named("data", encryptedData),
+			sql.Named("stateID", stateId))
+		if err != nil {
+			return fmt.Errorf("failed to insert new state version: %w", err)
+		}
+		versionId, err := result.LastInsertId()
+		if err != nil {
+			return fmt.Errorf("failed to get last insert id for new version of the state: %w", err)
+		}
+		version.Id = int(versionId)
+		return nil
+	})
+}
 
 // returns true in case of successful deletion
 func (db *DB) DeleteState(path string) (bool, error) {
