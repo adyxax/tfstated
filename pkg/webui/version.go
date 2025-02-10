@@ -32,6 +32,10 @@ func handleVersionGET(db *database.DB) http.Handler {
 			errorResponse(w, http.StatusInternalServerError, err)
 			return
 		}
+		if version == nil {
+			errorResponse(w, http.StatusNotFound, err)
+			return
+		}
 		state, err := db.LoadStateById(version.StateId)
 		if err != nil {
 			errorResponse(w, http.StatusInternalServerError, err)
