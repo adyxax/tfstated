@@ -1,38 +1,71 @@
 {{ define "main" }}
 <main class="responsive" id="main">
-  <a href="/states/new">
-    <button class="small-round">
-      <i>add</i>
-      <span>New</span>
-    </button>
-  </a>
-  <table class="clickable-rows no-space">
-    <thead>
-      <tr>
-        <th>Path</th>
-        <th>Updated</th>
-        <th>Locked</th>
-      </tr>
-    </thead>
-    <tbody>
-      {{ range .States }}
-      <tr>
-        <td><a href="/state/{{ .Id }}">{{ .Path }}</a></td>
-        <td><a href="/state/{{ .Id }}">{{ .Updated }}</a></td>
-        <td>
-          <a href="/state/{{ .Id }}">
-            {{ if eq .Lock nil }}no{{ else }}
-            <span>yes</span>
-            <div class="tooltip left max">
-              <b>Lock</b>
-              <p>{{ .Lock }}</p>
-            </div>
+  <div>
+    <div class="tabs">
+      <a data-ui="#explorer"{{ if eq .ActiveTab 0 }} class="active"{{ end }}>States</a>
+      <a data-ui="#new"{{ if eq .ActiveTab 1 }} class="active"{{ end }}>Create New State</a>
+    </div>
+    <div id="explorer" class="page padding{{ if eq .ActiveTab 0 }} active{{ end }}">
+      <table class="clickable-rows no-space">
+        <thead>
+          <tr>
+            <th>Path</th>
+            <th>Updated</th>
+            <th>Locked</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{ range .States }}
+          <tr>
+            <td><a href="/state/{{ .Id }}">{{ .Path }}</a></td>
+            <td><a href="/state/{{ .Id }}">{{ .Updated }}</a></td>
+            <td>
+              <a href="/state/{{ .Id }}">
+                {{ if eq .Lock nil }}no{{ else }}
+                <span>yes</span>
+                <div class="tooltip left max">
+                  <b>Lock</b>
+                  <p>{{ .Lock }}</p>
+                </div>
+                {{ end }}
+              </a>
+            </td>
+          </tr>
+          {{ end }}
+        </tbody>
+      </table>
+    </div>
+    <div id="new" class="page padding{{ if eq .ActiveTab 1 }} active{{ end }}">
+      <form action="/states" enctype="multipart/form-data" method="post">
+        <fieldset>
+          <div class="field border label{{ if .PathError }} invalid{{ end }}">
+            <input autofocus
+                   id="path"
+                   name="path"
+                   required
+                   type="text"
+                   value="{{ .Path }}">
+            <label for="path">Path</label>
+            {{ if .PathDuplicate }}
+            <span class="error">This path already exist</span>
+            {{ else if .PathError }}
+            <span class="error">Invalid path</span>
+            {{ else }}
+            <span class="helper">Valid URL path beginning with a /</span>
             {{ end }}
-          </a>
-        </td>
-      </tr>
-      {{ end }}
-    </tbody>
-  </table>
+          </div>
+          <div class="field label border">
+            <input name="file"
+                   required
+                   type="file">
+            <input type="text">
+            <label>File</label>
+            <span class="helper">JSON state file</span>
+          </div>
+          <button class="small-round" type="submit" value="submit">New</button>
+        </fieldset>
+      </form>
+    </div>
+  </div>
 </main>
 {{ end }}

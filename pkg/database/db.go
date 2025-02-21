@@ -104,7 +104,10 @@ func (db *DB) Close() error {
 		_ = db.writeDB.Close()
 		return fmt.Errorf("failed to close read database connection: %w", err)
 	}
-	return db.writeDB.Close()
+	if err := db.writeDB.Close(); err != nil {
+		return fmt.Errorf("failed to close write database connection: %w", err)
+	}
+	return nil
 }
 
 func (db *DB) Exec(query string, args ...any) (sql.Result, error) {
