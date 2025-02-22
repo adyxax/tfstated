@@ -7,9 +7,10 @@ import (
 	"time"
 
 	"git.adyxax.org/adyxax/tfstated/pkg/model"
+	"go.n16f.net/uuid"
 )
 
-func (db *DB) LoadVersionById(id int) (*model.Version, error) {
+func (db *DB) LoadVersionById(id uuid.UUID) (*model.Version, error) {
 	version := model.Version{
 		Id: id,
 	}
@@ -29,12 +30,12 @@ func (db *DB) LoadVersionById(id int) (*model.Version, error) {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
 		}
-		return nil, fmt.Errorf("failed to load version id %d from database: %w", id, err)
+		return nil, fmt.Errorf("failed to load version id %s from database: %w", id, err)
 	}
 	version.Created = time.Unix(created, 0)
 	version.Data, err = db.dataEncryptionKey.DecryptAES256(encryptedData)
 	if err != nil {
-		return nil, fmt.Errorf("failed to decrypt version %d data: %w", id, err)
+		return nil, fmt.Errorf("failed to decrypt version %s data: %w", id, err)
 	}
 	return &version, nil
 }

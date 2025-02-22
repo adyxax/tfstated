@@ -3,13 +3,15 @@ package model
 import (
 	"encoding/json"
 	"time"
+
+	"go.n16f.net/uuid"
 )
 
 type Version struct {
 	AccountId string
 	Created   time.Time
 	Data      json.RawMessage
-	Id        int
+	Id        uuid.UUID
 	Lock      *string
-	StateId   int
+	StateId   uuid.UUID
 }

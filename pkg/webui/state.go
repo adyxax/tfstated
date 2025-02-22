@@ -3,10 +3,10 @@ package webui
 import (
 	"html/template"
 	"net/http"
-	"strconv"
 
 	"git.adyxax.org/adyxax/tfstated/pkg/database"
 	"git.adyxax.org/adyxax/tfstated/pkg/model"
+	"go.n16f.net/uuid"
 )
 
 var stateTemplate = template.Must(template.ParseFS(htmlFS, "html/base.html", "html/state.html"))
@@ -19,9 +19,8 @@ func handleStateGET(db *database.DB) http.Handler {
 		Versions  []model.Version
 	}
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		stateIdStr := r.PathValue("id")
-		stateId, err := strconv.Atoi(stateIdStr)
-		if err != nil {
+		var stateId uuid.UUID
+		if err := stateId.Parse(r.PathValue("id")); err != nil {
 			errorResponse(w, http.StatusBadRequest, err)
 			return
 		}

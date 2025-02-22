@@ -9,6 +9,7 @@ import (
 
 	"git.adyxax.org/adyxax/tfstated/pkg/model"
 	"github.com/mattn/go-sqlite3"
+	"go.n16f.net/uuid"
 )
 
 func (db *DB) CreateState(path string, accountId string, data []byte) (*model.Version, error) {
@@ -16,11 +17,21 @@ func (db *DB) CreateState(path string, accountId string, data []byte) (*model.Ve
 	if err != nil {
 		return nil, fmt.Errorf("failed to encrypt state data: %w", err)
 	}
+	var stateId uuid.UUID
+	if err := stateId.Generate(uuid.V7); err != nil {
+		return nil, fmt.Errorf("failed to generate state id: %w", err)
+	}
+	var versionId uuid.UUID
+	if err := versionId.Generate(uuid.V7); err != nil {
+		return nil, fmt.Errorf("failed to generate version id: %w", err)
+	}
 	version := &model.Version{
 		AccountId: accountId,
+		Id:        versionId,
+		StateId:   stateId,
 	}
 	return version, db.WithTransaction(func(tx *sql.Tx) error {
-		result, err := tx.ExecContext(db.ctx, `INSERT INTO states(path) VALUES (?)`, path)
+		_, err := tx.ExecContext(db.ctx, `INSERT INTO states(id, path) VALUES (?, ?)`, stateId, path)
 		if err != nil {
 			var sqliteErr sqlite3.Error
 			if errors.As(err, &sqliteErr) {
@@ -31,25 +42,16 @@ func (db *DB) CreateState(path string, accountId string, data []byte) (*model.Ve
 			}
 			return fmt.Errorf("failed to insert new state: %w", err)
 		}
-		stateId, err := result.LastInsertId()
-		if err != nil {
-			return fmt.Errorf("failed to get last insert id for new state: %w", err)
-		}
-		version.StateId = int(stateId)
-		result, err = tx.ExecContext(db.ctx,
-			`INSERT INTO versions(account_id, data, state_id)
-               VALUES (:accountID, :data, :stateID)`,
+		_, err = tx.ExecContext(db.ctx,
+			`INSERT INTO versions(id, account_id, data, state_id)
+               VALUES (:id, :accountID, :data, :stateID)`,
 			sql.Named("accountID", accountId),
 			sql.Named("data", encryptedData),
+			sql.Named("id", versionId),
 			sql.Named("stateID", stateId))
 		if err != nil {
 			return fmt.Errorf("failed to insert new state version: %w", err)
 		}
-		versionId, err := result.LastInsertId()
-		if err != nil {
-			return fmt.Errorf("failed to get last insert id for new version of the state: %w", err)
-		}
-		version.Id = int(versionId)
 		return nil
 	})
 }
@@ -89,7 +91,7 @@ func (db *DB) GetState(path string) ([]byte, error) {
 	return db.dataEncryptionKey.DecryptAES256(encryptedData)
 }
 
-func (db *DB) LoadStateById(stateId int) (*model.State, error) {
+func (db *DB) LoadStateById(stateId uuid.UUID) (*model.State, error) {
 	state := model.State{
 		Id: stateId,
 	}
@@ -104,7 +106,7 @@ func (db *DB) LoadStateById(stateId int) (*model.State, error) {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
 		}
-		return nil, fmt.Errorf("failed to load state id %d from database: %w", stateId, err)
+		return nil, fmt.Errorf("failed to load state id %s from database: %w", stateId, err)
 	}
 	state.Created = time.Unix(created, 0)
 	state.Updated = time.Unix(updated, 0)
@@ -139,8 +141,8 @@ func (db *DB) LoadStates() ([]model.State, error) {
 	return states, nil
 }
 
-// returns true in case of id mismatch
-func (db *DB) SetState(path string, accountID string, data []byte, lockID string) (bool, error) {
+// returns true in case of lock mismatch
+func (db *DB) SetState(path string, accountId string, data []byte, lock string) (bool, error) {
 	encryptedData, err := db.dataEncryptionKey.EncryptAES256(data)
 	if err != nil {
 		return false, fmt.Errorf("failed to encrypt state data: %w", err)
@@ -148,45 +150,50 @@ func (db *DB) SetState(path string, accountID string, data []byte, lockID string
 	ret := false
 	return ret, db.WithTransaction(func(tx *sql.Tx) error {
 		var (
-			stateID  int64
+			stateId  string
 			lockData []byte
 		)
-		if err = tx.QueryRowContext(db.ctx, `SELECT id, lock->>'ID' FROM states WHERE path = ?;`, path).Scan(&stateID, &lockData); err != nil {
+		if err = tx.QueryRowContext(db.ctx, `SELECT id, lock->>'ID' FROM states WHERE path = ?;`, path).Scan(&stateId, &lockData); err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
-				var result sql.Result
-				result, err = tx.ExecContext(db.ctx, `INSERT INTO states(path) VALUES (?)`, path)
+				var stateUUID uuid.UUID
+				if err := stateUUID.Generate(uuid.V7); err != nil {
+					return fmt.Errorf("failed to generate state id: %w", err)
+				}
+				_, err = tx.ExecContext(db.ctx, `INSERT INTO states(id, path) VALUES (?, ?)`, stateUUID, path)
 				if err != nil {
 					return fmt.Errorf("failed to insert new state: %w", err)
 				}
-				stateID, err = result.LastInsertId()
-				if err != nil {
-					return fmt.Errorf("failed to get last insert id for new state: %w", err)
-				}
+				stateId = stateUUID.String()
 			} else {
 				return err
 			}
 		}
 
-		if lockID != "" && slices.Compare([]byte(lockID), lockData) != 0 {
-			err = fmt.Errorf("failed to update state, lock ID does not match")
+		if lock != "" && slices.Compare([]byte(lock), lockData) != 0 {
+			err = fmt.Errorf("failed to update state: lock ID mismatch")
 			ret = true
 			return err
 		}
+		var versionId uuid.UUID
+		if err := versionId.Generate(uuid.V7); err != nil {
+			return fmt.Errorf("failed to generate version id: %w", err)
+		}
 		_, err = tx.ExecContext(db.ctx,
-			`INSERT INTO versions(account_id, state_id, data, lock)
-           SELECT :accountID, :stateID, :data, lock
+			`INSERT INTO versions(id, account_id, state_id, data, lock)
+           SELECT :versionId, :accountId, :stateId, :data, lock
              FROM states
-             WHERE states.id = :stateID;`,
-			sql.Named("accountID", accountID),
-			sql.Named("stateID", stateID),
-			sql.Named("data", encryptedData))
+             WHERE states.id = :stateId;`,
+			sql.Named("accountId", accountId),
+			sql.Named("data", encryptedData),
+			sql.Named("stateId", stateId),
+			sql.Named("versionId", versionId))
 		if err != nil {
 			return fmt.Errorf("failed to insert new state version: %w", err)
 		}
 		_, err = tx.ExecContext(db.ctx,
 			`UPDATE states SET updated = ? WHERE id = ?;`,
 			time.Now().UTC().Unix(),
-			stateID)
+			stateId)
 		if err != nil {
 			return fmt.Errorf("failed to touch updated for state: %w", err)
 		}

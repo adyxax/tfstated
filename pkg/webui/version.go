@@ -1,13 +1,13 @@
 package webui
 
 import (
-	"fmt"
 	"html/template"
 	"net/http"
-	"strconv"
+	"path"
 
 	"git.adyxax.org/adyxax/tfstated/pkg/database"
 	"git.adyxax.org/adyxax/tfstated/pkg/model"
+	"go.n16f.net/uuid"
 )
 
 var versionTemplate = template.Must(template.ParseFS(htmlFS, "html/base.html", "html/version.html"))
@@ -21,9 +21,8 @@ func handleVersionGET(db *database.DB) http.Handler {
 		VersionData string
 	}
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		versionIdStr := r.PathValue("id")
-		versionId, err := strconv.Atoi(versionIdStr)
-		if err != nil {
+		var versionId uuid.UUID
+		if err := versionId.Parse(r.PathValue("id")); err != nil {
 			errorResponse(w, http.StatusBadRequest, err)
 			return
 		}
@@ -49,7 +48,7 @@ func handleVersionGET(db *database.DB) http.Handler {
 		versionData := string(version.Data[:])
 		render(w, versionTemplate, http.StatusOK, VersionsData{
 			Page: makePage(r, &Page{
-				Precedent: fmt.Sprintf("/state/%d", state.Id),
+				Precedent: path.Join("/state/", state.Id.String()),
 				Section:   "states",
 				Title:     state.Path,
 			}),

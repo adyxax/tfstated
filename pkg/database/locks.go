@@ -4,6 +4,9 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
+
+	"go.n16f.net/uuid"
 )
 
 // Atomically check the lock status of a state and lock it if unlocked. Returns
@@ -18,7 +21,11 @@ func (db *DB) SetLockOrGetExistingLock(path string, lock any) (bool, error) {
 				if lockData, err = json.Marshal(lock); err != nil {
 					return err
 				}
-				_, err = tx.ExecContext(db.ctx, `INSERT INTO states(path, lock) VALUES (?, json(?))`, path, lockData)
+				var stateId uuid.UUID
+				if err := stateId.Generate(uuid.V7); err != nil {
+					return fmt.Errorf("failed to generate state id: %w", err)
+				}
+				_, err = tx.ExecContext(db.ctx, `INSERT INTO states(id, path, lock) VALUES (?, ?, json(?))`, stateId, path, lockData)
 				ret = true
 				return err
 			} else {

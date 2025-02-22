@@ -24,7 +24,7 @@ CREATE TABLE sessions (
 ) STRICT;
 
 CREATE TABLE states (
-  id INTEGER PRIMARY KEY,
+  id TEXT PRIMARY KEY,
   path TEXT NOT NULL,
   lock TEXT,
   created INTEGER DEFAULT (unixepoch()),
@@ -33,9 +33,9 @@ CREATE TABLE states (
 CREATE UNIQUE INDEX states_path on states(path);
 
 CREATE TABLE versions (
-  id INTEGER PRIMARY KEY,
+  id TEXT PRIMARY KEY,
   account_id TEXT NOT NULL,
-  state_id INTEGER,
+  state_id TEXT,
   data BLOB,
   lock TEXT,
   created INTEGER DEFAULT (unixepoch()),

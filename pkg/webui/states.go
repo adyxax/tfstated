@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"net/url"
 	"path"
-	"strconv"
 
 	"git.adyxax.org/adyxax/tfstated/pkg/database"
 	"git.adyxax.org/adyxax/tfstated/pkg/model"
@@ -87,7 +86,7 @@ func handleStatesPOST(db *database.DB) http.Handler {
 			})
 			return
 		}
-		destination := path.Join("/version", strconv.Itoa(version.Id))
+		destination := path.Join("/version", version.Id.String())
 		http.Redirect(w, r, destination, http.StatusFound)
 	})
 }
