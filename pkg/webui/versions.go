@@ -10,9 +10,9 @@ import (
 	"go.n16f.net/uuid"
 )
 
-var versionTemplate = template.Must(template.ParseFS(htmlFS, "html/base.html", "html/version.html"))
+var versionsTemplate = template.Must(template.ParseFS(htmlFS, "html/base.html", "html/versions.html"))
 
-func handleVersionGET(db *database.DB) http.Handler {
+func handleVersionsGET(db *database.DB) http.Handler {
 	type VersionsData struct {
 		Page        *Page
 		Account     *model.Account
@@ -46,9 +46,9 @@ func handleVersionGET(db *database.DB) http.Handler {
 			return
 		}
 		versionData := string(version.Data[:])
-		render(w, versionTemplate, http.StatusOK, VersionsData{
+		render(w, versionsTemplate, http.StatusOK, VersionsData{
 			Page: makePage(r, &Page{
-				Precedent: path.Join("/state/", state.Id.String()),
+				Precedent: path.Join("/states/", state.Id.String()),
 				Section:   "states",
 				Title:     state.Path,
 			}),
