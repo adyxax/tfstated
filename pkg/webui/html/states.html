@@ -17,10 +17,10 @@
         <tbody>
           {{ range .States }}
           <tr>
-            <td><a href="/state/{{ .Id }}">{{ .Path }}</a></td>
-            <td><a href="/state/{{ .Id }}">{{ .Updated }}</a></td>
+            <td><a href="/states/{{ .Id }}">{{ .Path }}</a></td>
+            <td><a href="/states/{{ .Id }}">{{ .Updated }}</a></td>
             <td>
-              <a href="/state/{{ .Id }}">
+              <a href="/states/{{ .Id }}">
                 {{ if eq .Lock nil }}no{{ else }}
                 <span>yes</span>
                 <div class="tooltip left max">

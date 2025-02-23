@@ -20,8 +20,8 @@
     <tbody>
       {{ range .Versions }}
       <tr>
-        <td><a href="/version/{{ .Id }}">{{ index $.Usernames .AccountId }}</a></td>
-        <td><a href="/version/{{ .Id }}">{{ .Created }}</a></td>
+        <td><a href="/versions/{{ .Id }}">{{ index $.Usernames .AccountId }}</a></td>
+        <td><a href="/versions/{{ .Id }}">{{ .Created }}</a></td>
       </tr>
       {{ end }}
     </tbody>
