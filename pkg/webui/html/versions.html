@@ -2,7 +2,7 @@
 <main class="responsive" id="main">
   <p>
     Created by
-    <a href="/users/{{ .Account.Id }}">{{ .Account.Username }}</a>
+      <a href="/accounts/{{ .Account.Id }}" class="link underline">{{ .Account.Username }}</a>
     at {{ .Version.Created }}
   </p>
   <div>

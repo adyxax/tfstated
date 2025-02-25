@@ -1,0 +1,35 @@
+{{ define "main" }}
+<main class="responsive" id="main">
+  <div>
+    <div class="tabs">
+      <a data-ui="#explorer"{{ if eq .ActiveTab 0 }} class="active"{{ end }}>User Accounts</a>
+      <a data-ui="#new"{{ if eq .ActiveTab 1 }} class="active"{{ end }}>Create New User Account</a>
+    </div>
+    <div id="explorer" class="page padding{{ if eq .ActiveTab 0 }} active{{ end }}">
+      <table class="clickable-rows no-space">
+        <thead>
+          <tr>
+            <th>Username</th>
+            <th>Created</th>
+            <th>Last Login</th>
+            <th>Is Admin</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{ range .Accounts }}
+          <tr>
+            <td><a href="/accounts/{{ .Id }}">{{ .Username }}</a></td>
+            <td><a href="/accounts/{{ .Id }}">{{ .Created }}</a></td>
+            <td><a href="/accounts/{{ .Id }}">{{ .LastLogin }}</a></td>
+            <td><a href="/accounts/{{ .Id }}">{{ .IsAdmin }}</a></td>
+          </tr>
+          {{ end }}
+        </tbody>
+      </table>
+    </div>
+    <div id="new" class="page padding{{ if eq .ActiveTab 1 }} active{{ end }}">
+      <p>TODO</p>
+    </div>
+  </div>
+</main>
+{{ end }}

@@ -8,6 +8,7 @@ import (
 )
 
 type Page struct {
+	IsAdmin   bool
 	LightMode bool
 	Precedent string
 	Section   string
@@ -15,6 +16,8 @@ type Page struct {
 }
 
 func makePage(r *http.Request, page *Page) *Page {
+	account := r.Context().Value(model.AccountContextKey{}).(*model.Account)
+	page.IsAdmin = account.IsAdmin
 	settings := r.Context().Value(model.SettingsContextKey{}).(*model.Settings)
 	page.LightMode = settings.LightMode
 	return page

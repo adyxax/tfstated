@@ -20,6 +20,12 @@
   <i>settings</i>
   <span>Settings</span>
 </a>
+{{ if .Page.IsAdmin }}
+<a href="/accounts"{{ if eq .Page.Section "accounts" }} class="fill"{{ end}}>
+  <i>person</i>
+  <span>User Accounts</span>
+</a>
+{{ end }}
 <a href="/logout">
   <i>logout</i>
   <span>Logout</span>
