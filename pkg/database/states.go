@@ -122,8 +122,8 @@ func (db *DB) LoadStates() ([]model.State, error) {
 	defer rows.Close()
 	states := make([]model.State, 0)
 	for rows.Next() {
-		var state model.State
 		var (
+			state   model.State
 			created int64
 			updated int64
 		)

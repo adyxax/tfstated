@@ -54,6 +54,42 @@ func (db *DB) InitAdminAccount() error {
 	})
 }
 
+func (db *DB) LoadAccounts() ([]model.Account, error) {
+	rows, err := db.Query(
+		`SELECT id, username, salt, password_hash, is_admin, created, last_login, settings FROM accounts;`)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load accounts from database: %w", err)
+	}
+	defer rows.Close()
+	accounts := make([]model.Account, 0)
+	for rows.Next() {
+		var (
+			account   model.Account
+			created   int64
+			lastLogin int64
+		)
+		err = rows.Scan(
+			&account.Id,
+			&account.Username,
+			&account.Salt,
+			&account.PasswordHash,
+			&account.IsAdmin,
+			&created,
+			&lastLogin,
+			&account.Settings)
+		if err != nil {
+			return nil, fmt.Errorf("failed to load account from row: %w", err)
+		}
+		account.Created = time.Unix(created, 0)
+		account.LastLogin = time.Unix(lastLogin, 0)
+		accounts = append(accounts, account)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("failed to load accounts from rows: %w", err)
+	}
+	return accounts, nil
+}
+
 func (db *DB) LoadAccountUsernames() (map[string]string, error) {
 	rows, err := db.Query(
 		`SELECT id, username FROM accounts;`)
