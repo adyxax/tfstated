@@ -8,7 +8,7 @@ import (
 )
 
 type Version struct {
-	AccountId string
+	AccountId uuid.UUID
 	Created   time.Time
 	Data      json.RawMessage
 	Id        uuid.UUID

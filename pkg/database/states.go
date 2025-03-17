@@ -12,7 +12,7 @@ import (
 	"go.n16f.net/uuid"
 )
 
-func (db *DB) CreateState(path string, accountId string, data []byte) (*model.Version, error) {
+func (db *DB) CreateState(path string, accountId uuid.UUID, data []byte) (*model.Version, error) {
 	encryptedData, err := db.dataEncryptionKey.EncryptAES256(data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to encrypt state data: %w", err)
@@ -142,7 +142,7 @@ func (db *DB) LoadStates() ([]model.State, error) {
 }
 
 // returns true in case of lock mismatch
-func (db *DB) SetState(path string, accountId string, data []byte, lock string) (bool, error) {
+func (db *DB) SetState(path string, accountId uuid.UUID, data []byte, lock string) (bool, error) {
 	encryptedData, err := db.dataEncryptionKey.EncryptAES256(data)
 	if err != nil {
 		return false, fmt.Errorf("failed to encrypt state data: %w", err)
