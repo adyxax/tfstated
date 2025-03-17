@@ -115,7 +115,7 @@ func (db *DB) LoadAccountUsernames() (map[string]string, error) {
 	return accounts, nil
 }
 
-func (db *DB) LoadAccountById(id string) (*model.Account, error) {
+func (db *DB) LoadAccountById(id uuid.UUID) (*model.Account, error) {
 	account := model.Account{
 		Id: id,
 	}

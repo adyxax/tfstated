@@ -6,12 +6,13 @@ import (
 	"time"
 
 	"git.adyxax.org/adyxax/tfstated/pkg/helpers"
+	"go.n16f.net/uuid"
 )
 
 type AccountContextKey struct{}
 
 type Account struct {
-	Id           string
+	Id           uuid.UUID
 	Username     string
 	Salt         []byte
 	PasswordHash []byte
