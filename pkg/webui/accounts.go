@@ -3,15 +3,20 @@ package webui
 import (
 	"html/template"
 	"net/http"
+	"path"
 
 	"git.adyxax.org/adyxax/tfstated/pkg/database"
 	"git.adyxax.org/adyxax/tfstated/pkg/model"
 )
 
 type AccountsPage struct {
-	ActiveTab int
-	Page      *Page
-	Accounts  []model.Account
+	Accounts          []model.Account
+	ActiveTab         int
+	IsAdmin           string
+	Page              *Page
+	Username          string
+	UsernameDuplicate bool
+	UsernameInvalid   bool
 }
 
 var accountsTemplates = template.Must(template.ParseFS(htmlFS, "html/base.html", "html/accounts.html"))
@@ -27,5 +32,41 @@ func handleAccountsGET(db *database.DB) http.Handler {
 			Page:     makePage(r, &Page{Title: "User Accounts", Section: "accounts"}),
 			Accounts: accounts,
 		})
+	})
+}
+
+func handleAccountsPOST(db *database.DB) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		accounts, err := db.LoadAccounts()
+		if err != nil {
+			errorResponse(w, r, http.StatusInternalServerError, err)
+			return
+		}
+		accountUsername := r.FormValue("username")
+		isAdmin := r.FormValue("isAdmin")
+		page := AccountsPage{
+			ActiveTab: 1,
+			Page:      makePage(r, &Page{Title: "New Account", Section: "accounts"}),
+			Accounts:  accounts,
+			IsAdmin:   isAdmin,
+			Username:  accountUsername,
+		}
+		if ok := validUsername.MatchString(accountUsername); !ok {
+			page.UsernameInvalid = true
+			render(w, accountsTemplates, http.StatusBadRequest, page)
+			return
+		}
+		account, err := db.CreateAccount(accountUsername, isAdmin == "1")
+		if err != nil {
+			errorResponse(w, r, http.StatusInternalServerError, err)
+			return
+		}
+		if account == nil {
+			page.UsernameDuplicate = true
+			render(w, accountsTemplates, http.StatusBadRequest, page)
+			return
+		}
+		destination := path.Join("/accounts", account.Id.String())
+		http.Redirect(w, r, destination, http.StatusFound)
 	})
 }

@@ -5,12 +5,13 @@ CREATE TABLE schema_version (
 CREATE TABLE accounts (
   id TEXT PRIMARY KEY,
   username TEXT NOT NULL,
-  salt BLOB NOT NULL,
-  password_hash BLOB NOT NULL,
-  is_admin INTEGER NOT NULL DEFAULT FALSE,
+  salt BLOB,
+  password_hash BLOB,
+  is_admin INTEGER NOT NULL,
   created INTEGER NOT NULL DEFAULT (unixepoch()),
   last_login INTEGER NOT NULL DEFAULT (unixepoch()),
-  settings BLOB NOT NULL
+  settings BLOB NOT NULL,
+  password_reset TEXT
 ) STRICT;
 CREATE UNIQUE INDEX accounts_username on accounts(username);
 
