@@ -17,7 +17,7 @@ func sessionsMiddleware(db *database.DB) func(http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			cookie, err := r.Cookie(cookieName)
 			if err != nil && !errors.Is(err, http.ErrNoCookie) {
-				errorResponse(w, http.StatusInternalServerError, fmt.Errorf("failed to get request cookie \"%s\": %w", cookieName, err))
+				errorResponse(w, r, http.StatusInternalServerError, fmt.Errorf("failed to get request cookie \"%s\": %w", cookieName, err))
 				return
 			}
 			if err == nil {
@@ -26,14 +26,14 @@ func sessionsMiddleware(db *database.DB) func(http.Handler) http.Handler {
 				} else {
 					session, err := db.LoadSessionById(cookie.Value)
 					if err != nil {
-						errorResponse(w, http.StatusInternalServerError, err)
+						errorResponse(w, r, http.StatusInternalServerError, err)
 						return
 					}
 					if session == nil {
 						unsetSesssionCookie(w)
 					} else if !session.IsExpired() {
 						if err := db.TouchSession(cookie.Value); err != nil {
-							errorResponse(w, http.StatusInternalServerError, err)
+							errorResponse(w, r, http.StatusInternalServerError, err)
 							return
 						}
 						ctx := context.WithValue(r.Context(), model.SessionContextKey{}, session)

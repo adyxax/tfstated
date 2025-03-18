@@ -20,7 +20,7 @@ func handleAccountsGET(db *database.DB) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		accounts, err := db.LoadAccounts()
 		if err != nil {
-			errorResponse(w, http.StatusInternalServerError, err)
+			errorResponse(w, r, http.StatusInternalServerError, err)
 			return
 		}
 		render(w, accountsTemplates, http.StatusOK, AccountsPage{
