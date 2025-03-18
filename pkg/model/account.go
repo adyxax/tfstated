@@ -12,14 +12,15 @@ import (
 type AccountContextKey struct{}
 
 type Account struct {
-	Id           uuid.UUID
-	Username     string
-	Salt         []byte
-	PasswordHash []byte
-	IsAdmin      bool
-	Created      time.Time
-	LastLogin    time.Time
-	Settings     json.RawMessage
+	Id            uuid.UUID
+	Username      string
+	Salt          []byte
+	PasswordHash  []byte
+	IsAdmin       bool
+	Created       time.Time
+	LastLogin     time.Time
+	Settings      json.RawMessage
+	PasswordReset uuid.UUID
 }
 
 func (account *Account) CheckPassword(password string) bool {

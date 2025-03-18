@@ -10,12 +10,47 @@ import (
 
 	"git.adyxax.org/adyxax/tfstated/pkg/helpers"
 	"git.adyxax.org/adyxax/tfstated/pkg/model"
+	"github.com/mattn/go-sqlite3"
 	"go.n16f.net/uuid"
 )
 
 // Overriden by tests
 var AdvertiseAdminPassword = func(password string) {
 	slog.Info("Generated an initial admin password, please change it or delete the admin account after your first login", "password", password)
+}
+
+func (db *DB) CreateAccount(username string, isAdmin bool) (*model.Account, error) {
+	var accountId uuid.UUID
+	if err := accountId.Generate(uuid.V7); err != nil {
+		return nil, fmt.Errorf("failed to generate account id: %w", err)
+	}
+	var passwordReset uuid.UUID
+	if err := passwordReset.Generate(uuid.V4); err != nil {
+		return nil, fmt.Errorf("failed to generate password reset uuid: %w", err)
+	}
+	_, err := db.Exec(`INSERT INTO accounts(id, username, is_Admin, settings, password_reset)
+                              VALUES (?, ?, ?, ?, ?);`,
+		accountId,
+		username,
+		isAdmin,
+		[]byte("{}"),
+		passwordReset,
+	)
+	if err != nil {
+		var sqliteErr sqlite3.Error
+		if errors.As(err, &sqliteErr) {
+			if sqliteErr.Code == sqlite3.ErrNo(sqlite3.ErrConstraint) {
+				return nil, nil
+			}
+		}
+		return nil, fmt.Errorf("failed to insert new account: %w", err)
+	}
+	return &model.Account{
+		Id:            accountId,
+		Username:      username,
+		IsAdmin:       isAdmin,
+		PasswordReset: passwordReset,
+	}, nil
 }
 
 func (db *DB) InitAdminAccount() error {

@@ -28,7 +28,34 @@
       </table>
     </div>
     <div id="new" class="page padding{{ if eq .ActiveTab 1 }} active{{ end }}">
-      <p>TODO</p>
+      <form action="/accounts" enctype="multipart/form-data" method="post">
+        <fieldset>
+          <div class="field border label{{ if or .UsernameDuplicate .UsernameInvalid }} invalid{{ end }}">
+            <input autofocus
+                   id="username"
+                   name="username"
+                   required
+                   type="text"
+                   value="{{ .Username }}">
+            <label for="username">Username</label>
+            {{ if .UsernameDuplicate }}
+            <span class="error">This username already exist</span>
+            {{ else if .UsernameInvalid }}
+            <span class="error">Invalid username</span>
+            {{ end }}
+          </div>
+          <div class="field label">
+            <label>
+              <input {{ if .IsAdmin }} checked{{ end }}
+                     name="is-admin"
+                     type="checkbox"
+                     value="{{ .IsAdmin }}" />
+              <span>Is Admin</span>
+            </label>
+            </div>
+          <button class="small-round" type="submit" value="submit">Create User Account</button>
+        </fieldset>
+      </form>
     </div>
   </div>
 </main>

@@ -15,6 +15,8 @@ import (
 
 var loginTemplate = template.Must(template.ParseFS(htmlFS, "html/base.html", "html/login.html"))
 
+var validUsername = regexp.MustCompile(`^[a-zA-Z]\w*$`)
+
 type loginPage struct {
 	Page
 	Forbidden bool
@@ -38,7 +40,6 @@ func handleLoginGET() http.Handler {
 }
 
 func handleLoginPOST(db *database.DB) http.Handler {
-	var validUsername = regexp.MustCompile(`^[a-zA-Z]\w*$`)
 	renderForbidden := func(w http.ResponseWriter, username string) {
 		render(w, loginTemplate, http.StatusForbidden, loginPage{
 			Page:      Page{Title: "Login", Section: "login"},
