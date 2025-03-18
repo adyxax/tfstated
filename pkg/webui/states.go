@@ -29,7 +29,7 @@ func handleStatesGET(db *database.DB) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		states, err := db.LoadStates()
 		if err != nil {
-			errorResponse(w, http.StatusInternalServerError, err)
+			errorResponse(w, r, http.StatusInternalServerError, err)
 			return
 		}
 		render(w, statesTemplates, http.StatusOK, StatesPage{
@@ -43,12 +43,12 @@ func handleStatesPOST(db *database.DB) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// file upload limit of 20MB
 		if err := r.ParseMultipartForm(20 << 20); err != nil {
-			errorResponse(w, http.StatusBadRequest, err)
+			errorResponse(w, r, http.StatusBadRequest, err)
 			return
 		}
 		file, _, err := r.FormFile("file")
 		if err != nil {
-			errorResponse(w, http.StatusBadRequest, err)
+			errorResponse(w, r, http.StatusBadRequest, err)
 			return
 		}
 		defer file.Close()
@@ -65,18 +65,18 @@ func handleStatesPOST(db *database.DB) http.Handler {
 		}
 		data, err := io.ReadAll(file)
 		if err != nil {
-			errorResponse(w, http.StatusBadRequest, fmt.Errorf("failed to read uploaded file: %w", err))
+			errorResponse(w, r, http.StatusBadRequest, fmt.Errorf("failed to read uploaded file: %w", err))
 			return
 		}
 		fileType := http.DetectContentType(data)
 		if fileType != "text/plain; charset=utf-8" {
-			errorResponse(w, http.StatusBadRequest, fmt.Errorf("invalid file type: expected \"text/plain; charset=utf-8\" but got \"%s\"", fileType))
+			errorResponse(w, r, http.StatusBadRequest, fmt.Errorf("invalid file type: expected \"text/plain; charset=utf-8\" but got \"%s\"", fileType))
 			return
 		}
 		account := r.Context().Value(model.AccountContextKey{}).(*model.Account)
 		version, err := db.CreateState(statePath, account.Id, data)
 		if err != nil {
-			errorResponse(w, http.StatusInternalServerError, err)
+			errorResponse(w, r, http.StatusInternalServerError, err)
 			return
 		}
 		if version == nil {
@@ -103,22 +103,22 @@ func handleStatesIdGET(db *database.DB) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var stateId uuid.UUID
 		if err := stateId.Parse(r.PathValue("id")); err != nil {
-			errorResponse(w, http.StatusBadRequest, err)
+			errorResponse(w, r, http.StatusBadRequest, err)
 			return
 		}
 		state, err := db.LoadStateById(stateId)
 		if err != nil {
-			errorResponse(w, http.StatusInternalServerError, err)
+			errorResponse(w, r, http.StatusInternalServerError, err)
 			return
 		}
 		versions, err := db.LoadVersionsByState(state)
 		if err != nil {
-			errorResponse(w, http.StatusInternalServerError, err)
+			errorResponse(w, r, http.StatusInternalServerError, err)
 			return
 		}
 		usernames, err := db.LoadAccountUsernames()
 		if err != nil {
-			errorResponse(w, http.StatusInternalServerError, err)
+			errorResponse(w, r, http.StatusInternalServerError, err)
 			return
 		}
 		render(w, statesIdTemplate, http.StatusOK, StatesData{

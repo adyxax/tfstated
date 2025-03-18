@@ -23,26 +23,26 @@ func handleVersionsGET(db *database.DB) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var versionId uuid.UUID
 		if err := versionId.Parse(r.PathValue("id")); err != nil {
-			errorResponse(w, http.StatusBadRequest, err)
+			errorResponse(w, r, http.StatusBadRequest, err)
 			return
 		}
 		version, err := db.LoadVersionById(versionId)
 		if err != nil {
-			errorResponse(w, http.StatusInternalServerError, err)
+			errorResponse(w, r, http.StatusInternalServerError, err)
 			return
 		}
 		if version == nil {
-			errorResponse(w, http.StatusNotFound, err)
+			errorResponse(w, r, http.StatusNotFound, err)
 			return
 		}
 		state, err := db.LoadStateById(version.StateId)
 		if err != nil {
-			errorResponse(w, http.StatusInternalServerError, err)
+			errorResponse(w, r, http.StatusInternalServerError, err)
 			return
 		}
 		account, err := db.LoadAccountById(version.AccountId)
 		if err != nil {
-			errorResponse(w, http.StatusInternalServerError, err)
+			errorResponse(w, r, http.StatusInternalServerError, err)
 			return
 		}
 		versionData := string(version.Data[:])

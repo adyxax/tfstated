@@ -48,14 +48,14 @@ func handleLoginPOST(db *database.DB) http.Handler {
 	}
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if err := r.ParseForm(); err != nil {
-			errorResponse(w, http.StatusBadRequest, err)
+			errorResponse(w, r, http.StatusBadRequest, err)
 			return
 		}
 		username := r.FormValue("username")
 		password := r.FormValue("password")
 
 		if username == "" || password == "" { // the webui cannot issue this
-			errorResponse(w, http.StatusBadRequest, fmt.Errorf("Forbidden"))
+			errorResponse(w, r, http.StatusBadRequest, fmt.Errorf("Forbidden"))
 			return
 		}
 		if ok := validUsername.MatchString(username); !ok {
@@ -64,7 +64,7 @@ func handleLoginPOST(db *database.DB) http.Handler {
 		}
 		account, err := db.LoadAccountByUsername(username)
 		if err != nil {
-			errorResponse(w, http.StatusInternalServerError, err)
+			errorResponse(w, r, http.StatusInternalServerError, err)
 			return
 		}
 		if account == nil || !account.CheckPassword(password) {
@@ -72,12 +72,12 @@ func handleLoginPOST(db *database.DB) http.Handler {
 			return
 		}
 		if err := db.TouchAccount(account); err != nil {
-			errorResponse(w, http.StatusInternalServerError, err)
+			errorResponse(w, r, http.StatusInternalServerError, err)
 			return
 		}
 		sessionId, err := db.CreateSession(account)
 		if err != nil {
-			errorResponse(w, http.StatusInternalServerError, err)
+			errorResponse(w, r, http.StatusInternalServerError, err)
 			return
 		}
 		http.SetCookie(w, &http.Cookie{
@@ -105,7 +105,7 @@ func loginMiddleware(db *database.DB, requireSession func(http.Handler) http.Han
 			}
 			account, err := db.LoadAccountById(session.(*model.Session).AccountId)
 			if err != nil {
-				errorResponse(w, http.StatusInternalServerError, err)
+				errorResponse(w, r, http.StatusInternalServerError, err)
 				return
 			}
 			if account == nil {

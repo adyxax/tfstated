@@ -19,7 +19,7 @@ func adminMiddleware(db *database.DB, requireLogin func(http.Handler) http.Handl
 				return
 			}
 			if !account.(*model.Account).IsAdmin {
-				errorResponse(w, http.StatusForbidden, fmt.Errorf("Only administrators can perform this request."))
+				errorResponse(w, r, http.StatusForbidden, fmt.Errorf("Only administrators can perform this request."))
 				return
 			}
 			next.ServeHTTP(w, r)

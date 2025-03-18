@@ -28,7 +28,7 @@ func handleIndexGET() http.Handler {
 		if r.URL.Path == "/" {
 			http.Redirect(w, r, "/states", http.StatusFound)
 		} else {
-			errorResponse(w, http.StatusNotFound, fmt.Errorf("Page not found"))
+			errorResponse(w, r, http.StatusNotFound, fmt.Errorf("Page not found"))
 		}
 	})
 }

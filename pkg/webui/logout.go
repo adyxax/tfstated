@@ -18,7 +18,7 @@ func handleLogoutGET(db *database.DB) http.Handler {
 		session := r.Context().Value(model.SessionContextKey{})
 		err := db.DeleteSession(session.(*model.Session))
 		if err != nil {
-			errorResponse(w, http.StatusInternalServerError, err)
+			errorResponse(w, r, http.StatusInternalServerError, err)
 			return
 		}
 		unsetSesssionCookie(w)

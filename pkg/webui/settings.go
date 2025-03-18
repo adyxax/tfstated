@@ -28,7 +28,7 @@ func handleSettingsGET(db *database.DB) http.Handler {
 func handleSettingsPOST(db *database.DB) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if err := r.ParseForm(); err != nil {
-			errorResponse(w, http.StatusBadRequest, err)
+			errorResponse(w, r, http.StatusBadRequest, err)
 			return
 		}
 		darkMode := r.FormValue("dark-mode")
@@ -38,7 +38,7 @@ func handleSettingsPOST(db *database.DB) http.Handler {
 		account := r.Context().Value(model.AccountContextKey{}).(*model.Account)
 		err := db.SaveAccountSettings(account, &settings)
 		if err != nil {
-			errorResponse(w, http.StatusInternalServerError, err)
+			errorResponse(w, r, http.StatusInternalServerError, err)
 			return
 		}
 		render(w, settingsTemplates, http.StatusOK, SettingsPage{
