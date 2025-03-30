@@ -1,37 +1,3 @@
-{{ define "nav" }}
-<header>
-  <nav>
-    <a href="/">
-      <h6>TFSTATED</h6>
-    </a>
-  </nav>
-</header>
-{{ if eq .Page.Section "login" }}
-<a href="/login" class="active">
-  <i>login</i>
-  <span>Login</span>
-</a>
-{{ else }}
-<a href="/states"{{ if eq .Page.Section "states" }} class="fill"{{ end}}>
-  <i>home_storage</i>
-  <span>States</span>
-</a>
-<a href="/settings"{{ if eq .Page.Section "settings" }} class="fill"{{ end}}>
-  <i>settings</i>
-  <span>Settings</span>
-</a>
-{{ if .Page.IsAdmin }}
-<a href="/accounts"{{ if eq .Page.Section "accounts" }} class="fill"{{ end}}>
-  <i>person</i>
-  <span>User Accounts</span>
-</a>
-{{ end }}
-<a href="/logout">
-  <i>logout</i>
-  <span>Logout</span>
-</a>
-{{ end }}
-{{ end }}
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -39,26 +5,47 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="/static/favicon.svg">
     <link href="/static/main.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/beercss@3.8.0/dist/cdn/beer.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
     <title>TFSTATED - {{ .Page.Title }}</title>
   </head>
-  <body class="{{ if .Page.LightMode }}light{{ else }}dark{{ end }}">
-    <nav class="left drawer l">{{ template "nav" . }}</nav>
-    <nav class="left m">{{ template "nav" . }}</nav>
-    <nav class="bottom s">{{ template "nav" . }}</nav>
+  <body class="{{ if .Page.LightMode }}light-theme{{ else }}black-theme{{ end }}">
     <header>
-      <nav>
-        {{ if ne .Page.Precedent "" }}
-        <a href="{{ .Page.Precedent }}" class="button circle chip">
-            <i>arrow_back</i>
-          </a>
-        {{ end }}
-        <h5 class="max center-align">{{ .Page.Title }}</h5>
-      </nav>
+      <h6>TFSTATED</h6>
     </header>
-    {{ template "main" . }}
+    <div id="main">
+      <aside>
+        {{ if eq .Page.Section "login" }}
+        <a href="/login" class="active">
+          <i class="material-symbols-outlined">login</i>
+          <span>Login</span>
+        </a>
+        {{ else }}
+        <a href="/states"{{ if eq .Page.Section "states" }} class="active"{{ end}}>
+          <i class="material-symbols-outlined">home_storage</i>
+          <span>States</span>
+        </a>
+        <a href="/settings"{{ if eq .Page.Section "settings" }} class="active"{{ end}}>
+          <i class="material-symbols-outlined">settings</i>
+          <span>Settings</span>
+        </a>
+        {{ if .Page.IsAdmin }}
+        <a href="/accounts"{{ if eq .Page.Section "accounts" }} class="active"{{ end}}>
+          <i class="material-symbols-outlined">person</i>
+          <span>User Accounts</span>
+        </a>
+        {{ end }}
+        <hr>
+        <a href="/logout">
+          <i class="material-symbols-outlined">logout</i>
+          <span>Logout</span>
+        </a>
+        {{ end }}
+      </aside>
+      <main>
+        {{ template "main" . }}
+      </main>
+    </div>
     <footer>
     </footer>
-    <script type="module" src="https://cdn.jsdelivr.net/npm/beercss@3.8.0/dist/cdn/beer.min.js"></script>
   </body>
 </html>

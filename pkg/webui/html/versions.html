@@ -1,23 +1,21 @@
 {{ define "main" }}
-<main class="responsive" id="main">
-  <p>
-    Created by
-      <a href="/accounts/{{ .Account.Id }}" class="link underline">{{ .Account.Username }}</a>
-    at {{ .Version.Created }}
-  </p>
-  <div>
-    <div class="tabs">
-      <a data-ui="#explorer" class="active">Explorer</a>
-      <a data-ui="#raw">Raw</a>
-    </div>
-    <div id="explorer" class="page padding active">
-      <article class="border medium no-padding center-align middle-align">
-        <progress class="circle large"></progress>
-      </article>
-    </div>
-    <div id="raw" class="page padding">
-      <pre><code id="raw-state">{{ .VersionData }}</code></pre>
-    </div>
+<p>
+  Created by
+  <a href="/accounts/{{ .Account.Id }}" class="link underline">{{ .Account.Username }}</a>
+  at {{ .Version.Created }}
+</p>
+<div>
+  <div class="tabs">
+    <a data-ui="#explorer" class="active">Explorer</a>
+    <a data-ui="#raw">Raw</a>
   </div>
-</main>
+  <div id="explorer" class="page padding active">
+    <article class="border medium no-padding center-align middle-align">
+      <progress class="circle large"></progress>
+    </article>
+  </div>
+  <div id="raw" class="page padding">
+    <pre><code id="raw-state">{{ .VersionData }}</code></pre>
+  </div>
+</div>
 {{ end }}
