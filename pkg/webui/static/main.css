@@ -1,3 +1,318 @@
+:root {
+    /* Set sans-serif & mono fonts */
+    --sans-font: -apple-system, BlinkMacSystemFont, "Avenir Next", Avenir,
+                 "Nimbus Sans L", Roboto, "Noto Sans", "Segoe UI", Arial, Helvetica,
+                 "Helvetica Neue", sans-serif;
+    --mono-font: Consolas, Menlo, Monaco, "Andale Mono", "Ubuntu Mono", monospace;
+    --standard-border-radius: 5px;
+}
+.black-theme {
+    --bg-0: #181818;
+    --bg-1: #252525;
+    --bg-2: #3b3b3b;
+    --dim: #777777;
+    --fg-0: #b9b9b9;
+    --fg-1: #dedede;
+    --red: #ed4a46;
+    --green: #70b433;
+    --yellow: #dbb32d;
+    --blue: #368aeb;
+    --magenta: #eb6eb7;
+    --cyan: #3fc5b7;
+    --orange: #e67f43;
+    --violet: #a580e2;
+    --br_red: #ff5e56;
+    --br_green: #83c746;
+    --br_yellow: #efc541;
+    --br_blue: #4f9cfe;
+    --br_magenta: #ff81ca;
+    --br_cyan: #56d8c9;
+    --br_orange: #fa9153;
+    --br_violet: #b891f5;
+}
+.light-theme {
+    --bg-0: #fbf3db;
+    --bg-1: #ece3cc;
+    --bg-2: #d5cdb6;
+    --dim: #909995;
+    --fg-0: #53676d;
+    --fg-1: #3a4d53;
+    --red: #d2212d;
+    --green: #489100;
+    --yellow: #ad8900;
+    --blue: #0072d4;
+    --magenta: #ca4898;
+    --cyan: #009c8f;
+    --orange: #c25d1e;
+    --violet: #8762c6;
+    --br_red: #cc1729;
+    --br_green: #428b00;
+    --br_yellow: #a78300;
+    --br_blue: #006dce;
+    --br_magenta: #c44392;
+    --br_cyan: #00978a;
+    --br_orange: #bc5819;
+    --br_violet: #825dc0;
+}
+
+html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockquote, pre, a, abbr, acronym, address, big, cite, code, del, dfn, em, img, ins, kbd, q, s, samp, small, strike, strong, sub, sup, tt, var, b, u, i, center, dl, dt, dd, ol, ul, li, fieldset, form, label, legend, table, caption, tbody, tfoot, thead, tr, th, td, article, aside, canvas, details, embed, figure, figcaption, footer, header, hgroup, menu, nav, output, ruby, section, summary, time, mark, audio, video {
+    border:0;
+    font:inherit;
+    font-size:100%;
+    margin:0;
+    padding:0;
+    vertical-align:baseline;
+}
+article, aside, details, figcaption, figure, footer, header, hgroup, menu, nav, section {
+    display: block;
+}
+* {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+textarea,
+select,
+input,
+progress {
+    width: fit-content;
+}
+
+html {
+    font-family: var(--sans-font);
+    scroll-behavior: smooth;
+}
+body {
+	background-color: var(--bg-0);
+	color: var(--fg-0);
+	display: flex;
+    flex-direction: column;
+    font-feature-settings: "kern" 1;
+    font-kerning: normal;
+    font-size:   16px;
+    margin: 0;
+}
+header {
+	background-color: var(--bg-0);
+    margin-left:   auto;
+    margin-right:  auto;
+    text-align: center;
+    width: 960px;
+}
+#main {
+	display: flex;
+    flex-direction: row;
+    gap: 8px;
+    margin-left:   auto;
+    margin-right:  auto;
+    padding: 8px 0px;
+}
+#main aside {
+    align-items: stretch;
+    display: flex;
+    flex-direction: column;
+    margin-left:   auto;
+    max-width: 176px;
+    min-width: 176px;
+}
+#main aside a {
+    align-items: center;
+	background-color: var(--bg-1);
+    border-radius: 16px;
+    display: inline-flex;
+    font-size: 16px;
+    gap: 8px;
+    margin: 4px 2px;
+    padding: 4px 16px;
+    text-align: center;
+    text-decoration: none;
+}
+#main aside a.active {
+	background-color: var(--bg-2);
+}
+main {
+    background-color: var(--bg-1);
+    margin-right:   auto;
+	overflow-wrap: anywhere;
+    scrollbar-gutter: stable both-edges;
+    max-width: 776px;
+    min-width: 776px;
+}
+h1,  h2,  h3,  h4,  h5,  h6 {
+	font-family: open, serif;
+    font-weight: 700;
+    line-height: 1.2em;
+}
+h1 {
+    font-size: 33px;
+}
+h2 {
+    font-size: 28px;
+}
+h3 {
+    font-size: 24px;
+}
+h4 {
+    font-size: 21px;
+}
+h5 {
+    font-size: 19px;
+}
+h6 {
+    font-size: 16px;
+}
+h1:not(:first-child) {
+    margin-top: 28px;
+}
+h2:not(:first-child) {
+    margin-top: 24px;
+}
+h3:not(:first-child) {
+    margin-top: 21px;
+}
+h4:not(:first-child) {
+    margin-top: 19px;
+}
+h5:not(:first-child) {
+    margin-top: 16px;
+}
+h6:not(:first-child) {
+    margin-top: 14px;
+}
+h1:not(:last-child) {
+    margin-bottom: 21px;
+}
+h2:not(:last-child) {
+    margin-bottom: 19px;
+}
+h3:not(:last-child) {
+    margin-bottom: 16px;
+}
+h4:not(:last-child) {
+    margin-bottom: 14px;
+}
+h5:not(:last-child) {
+    margin-bottom: 13px;
+}
+h6:not(:last-child) {
+    margin-bottom: 12px;
+}
+aside:not(:first-child) {
+    margin-top: 12px;
+}
+
+p {
+	text-align: justify;
+	hyphens: auto;
+	text-justify: inter-character;
+}
+p:not(:last-child) {
+    margin-bottom: 8px;
+}
+pre,code {
+	background-color: var(--bg-0);
+	color: var(--fg-0);
+    font-family: monospace;
+    margin: 0;
+    overflow-x: scroll;
+}
+ul {
+    padding-left: 32px;
+}
+ul li {
+	margin-bottom: 4px;
+}
+.fullwidth {
+	width: 100%;
+}
+img[src*='#center'] {
+	display: block;
+	margin: auto;
+}
+
+a {
+	color: var(--yellow);
+}
+a:visited {
+	color: var(--orange);
+}
+h1, a:hover {
+	color: var(--red);
+    text-wrap: balance;
+}
+h2, h3, h4, h5, h6 {
+	color: var(--green);
+    text-wrap: balance;
+}
+
+footer {
+	background-color: var(--bg-0);
+    margin-left:   auto;
+    margin-right:  auto;
+	padding: 10px;
+}
+footer p {
+	color: var(--green);
+	text-align: center;
+}
+footer a {
+	color: var(--green);
+}
+
+@media only screen and (640px <= width < 960px) { /*864*/
+    header {
+        width: calc(100vw - 16px);
+    }
+	#main {
+        /* These 16px account for the vertical scrollbar */
+        max-width: calc(100vw - 16px);
+        min-width: calc(100vw - 16px);
+	}
+    #main aside {
+        align-items: center;
+        max-width: 64px;
+        min-width: 64px;
+    }
+    #main aside a span {
+        display: none;
+    }
+    main {
+        max-width: calc(100vw - 16px - 64px);
+        min-width: calc(100vw - 16px - 64px);
+    }
+}
+@media only screen and (width < 640px) {
+    header {
+        width: calc(100vw - 16px);
+    }
+	#main {
+        display: block;
+        max-width: auto;
+        min-width: auto;
+	}
+    main {
+        max-width: calc(100vw - 16px);
+        min-width: calc(100vw - 16px);
+    }
+    #main aside {
+        bottom: 0;
+        flex-direction: row;
+        position: fixed;
+        max-width: calc(100vw - 16px);
+        min-width: calc(100vw - 16px);
+        overflow: scroll;
+    }
+    #main aside a {
+        display: flex;
+        flex-direction: column;
+    }
+}
+
+
+
 table tbody a {
     display: block;
     text-decoration: none;
@@ -5,4 +320,8 @@ table tbody a {
 }
 .clickable-rows tbody tr:hover a {
     background-color: var(--secondary-container);
+}
+
+.material-icons {
+    font-size: 16px;
 }

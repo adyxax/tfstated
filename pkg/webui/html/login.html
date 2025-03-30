@@ -1,27 +1,25 @@
 {{ define "main" }}
-<main class="responsive">
-  <form action="/login" method="post">
-    <fieldset>
-      <div class="field border label{{ if .Forbidden }} invalid{{ end }}">
-        <input autofocus
-               id="username"
-               name="username"
-               type="text"
-               value="{{ .Username }}"
-               required>
-        <label for="username">Username</label>
-        {{ if .Forbidden }}<span class="error">Invalid username or password</span>{{ end }}
-      </div>
-      <div class="field border label{{ if .Forbidden }} invalid{{ end}}">
-        <input id="password"
-               name="password"
-               type="password"
-               required>
-        <label for="password">Password</label>
-        {{ if .Forbidden }}<span class="error">Invalid username or password</span>{{ end }}
-      </div>
-      <button class="small-round" type="submit" value="login">Login</button>
-    </fieldset>
-  </form>
-</main>
+<form action="/login" method="post">
+  <fieldset>
+    <div class="field border label{{ if .Forbidden }} invalid{{ end }}">
+      <input autofocus
+             id="username"
+             name="username"
+             type="text"
+             value="{{ .Username }}"
+             required>
+      <label for="username">Username</label>
+      {{ if .Forbidden }}<span class="error">Invalid username or password</span>{{ end }}
+    </div>
+    <div class="field border label{{ if .Forbidden }} invalid{{ end}}">
+      <input id="password"
+             name="password"
+             type="password"
+             required>
+      <label for="password">Password</label>
+      {{ if .Forbidden }}<span class="error">Invalid username or password</span>{{ end }}
+    </div>
+    <button class="small-round" type="submit" value="login">Login</button>
+  </fieldset>
+</form>
 {{ end }}

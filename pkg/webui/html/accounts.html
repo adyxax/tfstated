@@ -1,62 +1,60 @@
 {{ define "main" }}
-<main class="responsive" id="main">
-  <div>
-    <div class="tabs">
-      <a data-ui="#explorer"{{ if eq .ActiveTab 0 }} class="active"{{ end }}>User Accounts</a>
-      <a data-ui="#new"{{ if eq .ActiveTab 1 }} class="active"{{ end }}>Create New User Account</a>
-    </div>
-    <div id="explorer" class="page padding{{ if eq .ActiveTab 0 }} active{{ end }}">
-      <table class="clickable-rows no-space">
-        <thead>
-          <tr>
-            <th>Username</th>
-            <th>Created</th>
-            <th>Last Login</th>
-            <th>Is Admin</th>
-          </tr>
-        </thead>
-        <tbody>
-          {{ range .Accounts }}
-          <tr>
-            <td><a href="/accounts/{{ .Id }}">{{ .Username }}</a></td>
-            <td><a href="/accounts/{{ .Id }}">{{ .Created }}</a></td>
-            <td><a href="/accounts/{{ .Id }}">{{ .LastLogin }}</a></td>
-            <td><a href="/accounts/{{ .Id }}">{{ .IsAdmin }}</a></td>
-          </tr>
-          {{ end }}
-        </tbody>
-      </table>
-    </div>
-    <div id="new" class="page padding{{ if eq .ActiveTab 1 }} active{{ end }}">
-      <form action="/accounts" enctype="multipart/form-data" method="post">
-        <fieldset>
-          <div class="field border label{{ if or .UsernameDuplicate .UsernameInvalid }} invalid{{ end }}">
-            <input autofocus
-                   id="username"
-                   name="username"
-                   required
-                   type="text"
-                   value="{{ .Username }}">
-            <label for="username">Username</label>
-            {{ if .UsernameDuplicate }}
-            <span class="error">This username already exist</span>
-            {{ else if .UsernameInvalid }}
-            <span class="error">Invalid username</span>
-            {{ end }}
-          </div>
-          <div class="field label">
-            <label>
-              <input {{ if .IsAdmin }} checked{{ end }}
-                     name="is-admin"
-                     type="checkbox"
-                     value="{{ .IsAdmin }}" />
-              <span>Is Admin</span>
-            </label>
-            </div>
-          <button class="small-round" type="submit" value="submit">Create User Account</button>
-        </fieldset>
-      </form>
-    </div>
+<div>
+  <div class="tabs">
+    <a data-ui="#explorer"{{ if eq .ActiveTab 0 }} class="active"{{ end }}>User Accounts</a>
+    <a data-ui="#new"{{ if eq .ActiveTab 1 }} class="active"{{ end }}>Create New User Account</a>
   </div>
-</main>
+  <div id="explorer" class="page padding{{ if eq .ActiveTab 0 }} active{{ end }}">
+    <table class="clickable-rows no-space">
+      <thead>
+        <tr>
+          <th>Username</th>
+          <th>Created</th>
+          <th>Last Login</th>
+          <th>Is Admin</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{ range .Accounts }}
+        <tr>
+          <td><a href="/accounts/{{ .Id }}">{{ .Username }}</a></td>
+          <td><a href="/accounts/{{ .Id }}">{{ .Created }}</a></td>
+          <td><a href="/accounts/{{ .Id }}">{{ .LastLogin }}</a></td>
+          <td><a href="/accounts/{{ .Id }}">{{ .IsAdmin }}</a></td>
+        </tr>
+        {{ end }}
+      </tbody>
+    </table>
+  </div>
+  <div id="new" class="page padding{{ if eq .ActiveTab 1 }} active{{ end }}">
+    <form action="/accounts" enctype="multipart/form-data" method="post">
+      <fieldset>
+        <div class="field border label{{ if or .UsernameDuplicate .UsernameInvalid }} invalid{{ end }}">
+          <input autofocus
+                 id="username"
+                 name="username"
+                 required
+                 type="text"
+                 value="{{ .Username }}">
+          <label for="username">Username</label>
+          {{ if .UsernameDuplicate }}
+          <span class="error">This username already exist</span>
+          {{ else if .UsernameInvalid }}
+          <span class="error">Invalid username</span>
+          {{ end }}
+        </div>
+        <div class="field label">
+          <label>
+            <input {{ if .IsAdmin }} checked{{ end }}
+                   name="is-admin"
+                   type="checkbox"
+                   value="{{ .IsAdmin }}" />
+            <span>Is Admin</span>
+          </label>
+        </div>
+        <button class="small-round" type="submit" value="submit">Create User Account</button>
+      </fieldset>
+    </form>
+  </div>
+</div>
 {{ end }}
