@@ -105,7 +105,7 @@ header {
 #main {
 	display: flex;
     flex-direction: row;
-    gap: 8px;
+    gap: 16px;
     margin-left:   auto;
     margin-right:  auto;
     padding: 8px 0px;
@@ -130,16 +130,21 @@ header {
     text-align: center;
     text-decoration: none;
 }
-#main aside a.active {
-	background-color: var(--bg-2);
+#main aside a:hover {
+	background-color: var(--br_orange);
+    color: var(--red);
 }
 main {
     background-color: var(--bg-1);
     margin-right:   auto;
+    padding: 8px;
 	overflow-wrap: anywhere;
     scrollbar-gutter: stable both-edges;
     max-width: 776px;
     min-width: 776px;
+}
+hr {
+    width: 50%;
 }
 h1,  h2,  h3,  h4,  h5,  h6 {
 	font-family: open, serif;
@@ -225,14 +230,62 @@ ul {
 ul li {
 	margin-bottom: 4px;
 }
-.fullwidth {
-	width: 100%;
+article, fieldset {
+    border: 1px solid var(--fg-0);
+    border-radius: 4px;
+    padding: 8px;
 }
-img[src*='#center'] {
-	display: block;
-	margin: auto;
+button {
+    background-color: var(--bg-2);
+    border: 1px solid var(--orange);
+    color: var(--orange);
+    align-items: center;
+    border: 1px solid var(--fg-1);
+    border-radius: 8px;
+    display: inline-flex;
+    font-size: 16px;
+    gap: 8px;
+    margin: 4px 2px;
+    padding: 4px 4px;
+    text-align: center;
+    text-decoration: none;
 }
-
+button:hover {
+    background-color: var(--br_orange);
+    border: 1px solid var(--red);
+	color: var(--red);
+}
+.primary {
+    background-color: var(--orange);
+    color: var(--fg-1);
+}
+.flex-column {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.flex-row {
+    align-items: start;
+    display: flex;
+    flex-direction: row;
+    gap: 16px;
+}
+.flex-stretch {
+    flex: 1;
+}
+.grid-2 {
+    align-items: center;
+    display: grid;
+    grid-template-columns: min-content 1fr;
+}
+.grid-3 {
+    align-items: center;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+}
+.grid-3 span {
+    text-align: center;
+}
 a {
 	color: var(--yellow);
 }
@@ -262,9 +315,9 @@ footer a {
 	color: var(--green);
 }
 
-@media only screen and (640px <= width < 960px) { /*864*/
+@media only screen and (640px <= width < 968px) { /*856*/
     header {
-        width: calc(100vw - 16px);
+        width: calc(100vw - 32px); /* 8x2 padding + 16 gap */
     }
 	#main {
         /* These 16px account for the vertical scrollbar */
@@ -280,13 +333,16 @@ footer a {
         display: none;
     }
     main {
-        max-width: calc(100vw - 16px - 64px);
-        min-width: calc(100vw - 16px - 64px);
+        max-width: calc(100vw - 32px - 64px);
+        min-width: calc(100vw - 32px - 64px);
     }
 }
 @media only screen and (width < 640px) {
     header {
         width: calc(100vw - 16px);
+    }
+    #main aside hr {
+        width: auto;
     }
 	#main {
         display: block;
@@ -298,6 +354,7 @@ footer a {
         min-width: calc(100vw - 16px);
     }
     #main aside {
+	    background-color: var(--bg-0);
         bottom: 0;
         flex-direction: row;
         position: fixed;
