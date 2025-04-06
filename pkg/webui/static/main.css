@@ -137,7 +137,7 @@ header {
 main {
     background-color: var(--bg-1);
     margin-right:   auto;
-    padding: 8px;
+    padding: 16px;
 	overflow-wrap: anywhere;
     scrollbar-gutter: stable both-edges;
     max-width: 776px;
@@ -230,9 +230,16 @@ ul {
 ul li {
 	margin-bottom: 4px;
 }
-article, fieldset {
+article {
     border: 1px solid var(--fg-0);
     border-radius: 4px;
+    margin: 8px 0px 8px 0px;
+    padding: 8px;
+}
+fieldset {
+    border: 1px solid var(--fg-0);
+    border-radius: 4px;
+    margin: 0px 0px 8px 0px;
     padding: 8px;
 }
 button {
@@ -254,6 +261,9 @@ button:hover {
     background-color: var(--br_orange);
     border: 1px solid var(--red);
 	color: var(--red);
+}
+.error {
+    color: var(--red);
 }
 .primary {
     background-color: var(--orange);
