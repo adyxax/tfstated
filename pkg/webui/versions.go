@@ -48,9 +48,8 @@ func handleVersionsGET(db *database.DB) http.Handler {
 		versionData := string(version.Data[:])
 		render(w, versionsTemplate, http.StatusOK, VersionsData{
 			Page: makePage(r, &Page{
-				Precedent: path.Join("/states/", state.Id.String()),
-				Section:   "states",
-				Title:     state.Path,
+				Section: "states",
+				Title:   state.Path,
 			}),
 			Account:     account,
 			State:       state,

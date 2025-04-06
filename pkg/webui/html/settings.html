@@ -1,23 +1,20 @@
 {{ define "main" }}
+<h1>Settings</h1>
 <form action="/settings" method="post">
   <fieldset>
-    <div class="field middle-align">
-      <nav>
-        <div class="max">
-          <h6>Dark Mode</h6>
-        </div>
-        <label class="switch icon">
-          <input {{ if not .Settings.LightMode }} checked{{ end }}
-                 name="dark-mode"
-                 type="checkbox"
-                 value="1" />
-          <span>
-            <i>dark_mode</i>
-          </span>
-        </label>
-      </nav>
+    <legend>Account Settings</legend>
+    <div style="align-items:center; display:grid; grid-template-columns:1fr 1fr;">
+      <label for="dark-mode">Dark mode</label>
+      <input autofocus
+             {{ if not .Settings.LightMode }}checked{{ end }}
+             id="dark-mode"
+             name="dark-mode"
+             type="checkbox"
+             value="1">
     </div>
-    <button class="small-round" type="submit" value="login">Save</button>
+    <div style="align-self:stretch; display:flex; justify-content:flex-end;">
+      <button class="primary" type="submit" value="submit">Save</button>
+    </div>
   </fieldset>
 </form>
 {{ end }}

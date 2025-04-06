@@ -10,7 +10,6 @@ import (
 type Page struct {
 	IsAdmin   bool
 	LightMode bool
-	Precedent string
 	Section   string
 	Title     string
 }

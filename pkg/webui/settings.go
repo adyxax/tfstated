@@ -41,12 +41,10 @@ func handleSettingsPOST(db *database.DB) http.Handler {
 			errorResponse(w, r, http.StatusInternalServerError, err)
 			return
 		}
+		page := makePage(r, &Page{Title: "Settings", Section: "settings"})
+		page.LightMode = settings.LightMode
 		render(w, settingsTemplates, http.StatusOK, SettingsPage{
-			Page: &Page{
-				LightMode: settings.LightMode,
-				Title:     "Settings",
-				Section:   "settings",
-			},
+			Page:     page,
 			Settings: &settings,
 		})
 	})

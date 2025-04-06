@@ -15,21 +15,21 @@
     <div id="main">
       <aside>
         {{ if eq .Page.Section "login" }}
-        <a href="/login" class="active">
+        <a href="/login" class="primary">
           <i class="material-symbols-outlined">login</i>
           <span>Login</span>
         </a>
         {{ else }}
-        <a href="/states"{{ if eq .Page.Section "states" }} class="active"{{ end}}>
+        <a href="/states"{{ if eq .Page.Section "states" }} class="primary"{{ end}}>
           <i class="material-symbols-outlined">home_storage</i>
           <span>States</span>
         </a>
-        <a href="/settings"{{ if eq .Page.Section "settings" }} class="active"{{ end}}>
+        <a href="/settings"{{ if eq .Page.Section "settings" }} class="primary"{{ end}}>
           <i class="material-symbols-outlined">settings</i>
           <span>Settings</span>
         </a>
         {{ if .Page.IsAdmin }}
-        <a href="/accounts"{{ if eq .Page.Section "accounts" }} class="active"{{ end}}>
+        <a href="/accounts"{{ if eq .Page.Section "accounts" }} class="primary"{{ end}}>
           <i class="material-symbols-outlined">person</i>
           <span>User Accounts</span>
         </a>

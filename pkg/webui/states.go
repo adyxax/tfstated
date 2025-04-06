@@ -126,9 +126,8 @@ func handleStatesIdGET(db *database.DB) http.Handler {
 		}
 		render(w, statesIdTemplate, http.StatusOK, StatesData{
 			Page: makePage(r, &Page{
-				Precedent: "/states",
-				Section:   "states",
-				Title:     state.Path,
+				Section: "states",
+				Title:   state.Path,
 			}),
 			State:     state,
 			Usernames: usernames,
