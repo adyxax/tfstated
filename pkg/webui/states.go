@@ -41,6 +41,7 @@ func handleStatesGET(db *database.DB) http.Handler {
 
 func handleStatesPOST(db *database.DB) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		states, err := db.LoadStates()
 		// file upload limit of 20MB
 		if err := r.ParseMultipartForm(20 << 20); err != nil {
 			errorResponse(w, r, http.StatusBadRequest, err)
@@ -60,6 +61,7 @@ func handleStatesPOST(db *database.DB) http.Handler {
 				Page:      makePage(r, &Page{Title: "New State", Section: "states"}),
 				Path:      statePath,
 				PathError: true,
+				States:    states,
 			})
 			return
 		}
@@ -85,6 +87,7 @@ func handleStatesPOST(db *database.DB) http.Handler {
 				Page:          makePage(r, &Page{Title: "New State", Section: "states"}),
 				Path:          statePath,
 				PathDuplicate: true,
+				States:        states,
 			})
 			return
 		}
