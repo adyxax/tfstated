@@ -67,18 +67,23 @@ article, aside, details, figcaption, figure, footer, header, hgroup, menu, nav, 
     display: block;
 }
 * {
-    box-sizing: border-box;
     -webkit-tap-highlight-color: transparent;
 }
-
 *, *::before, *::after {
     box-sizing: border-box;
 }
-textarea,
-select,
+label,
 input,
-progress {
-    width: fit-content;
+progress,
+select,
+textarea {
+    min-width: fit-content;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+input:not([type=image i], [type=range i], [type=checkbox i], [type=radio i]) {
+  overflow: clip !important;
+  overflow-clip-margin: 0 !important;
 }
 
 html {
@@ -242,7 +247,7 @@ fieldset {
     margin: 0px 0px 8px 0px;
     padding: 8px;
 }
-button {
+button, .button {
     background-color: var(--bg-2);
     border: 1px solid var(--orange);
     color: var(--orange);
@@ -266,8 +271,8 @@ button:hover {
     color: var(--red);
 }
 .primary {
-    background-color: var(--orange);
-    color: var(--fg-1);
+    background-color: var(--orange) !important;
+    color: var(--fg-1) !important;
 }
 .flex-column {
     display: flex;
@@ -376,17 +381,50 @@ footer a {
         display: flex;
         flex-direction: column;
     }
+    .flex-row {
+        flex-wrap: wrap;
+    }
 }
 
-
-
-table tbody a {
-    display: block;
-    text-decoration: none;
-    transition: all 0.25s ease-out;
+th {
+    border-bottom: 1px solid var(--fg-0);
 }
 .clickable-rows tbody tr:hover a {
     background-color: var(--secondary-container);
+}
+
+.tooltip {
+  border-bottom: 1px dotted var(--fg-0);
+  display: inline-block;
+  position: relative;
+}
+.tooltip .tooltip-text {
+    background-color: var(--bg-1);
+    border: 1px solid var(--fg-0);
+    border-radius: 4px;
+    color: var(--fg-0);
+    left: 50%;
+    margin-left: -60px;
+    padding: 5px 0;
+    position: absolute;
+    text-align: center;
+    top: 100%;
+    visibility: hidden;
+    width: 120px;
+    z-index: 1;
+}
+.tooltip .tooltip-text::after {
+    border-color: transparent transparent var(--fg-0) transparent;
+    border-style: solid;
+    border-width: 5px;
+    bottom: 100%;  /* At the top of the tooltip */
+    content: " ";
+    left: 50%;
+    margin-left: -5px;
+    position: absolute;
+}
+.tooltip:hover .tooltip-text {
+  visibility: visible;
 }
 
 .material-icons {

@@ -1,10 +1,10 @@
 {{ define "main" }}
 <h1>States</h1>
-<div class="flex-row" style="justify-content: space-between;">
-  <div style="min-width: 240px;">
-    <p>TfStated is currently managing {{ len .States }} states.</p>
+<div class="flex-row" style="justify-content:space-between;">
+  <div style="min-width:240px;">
+    <p>TfStated is currently managing <span class=button>{{ len .States }}</span> states.</p>
     <p>Use this page to inspect the existing states.</p>
-    <p>You also have the option to upload a state file in order to create a new one. This is equivalent to using the <code>state push</code> command of OpenTofu/Terraform on a brand new state.</p>
+    <p>You also have the option to upload a JSON state file in order to create a new state in TfStated. This is equivalent to using the <code>state push</code> command of OpenTofu/Terraform on a brand new state.</p>
   </div>
   <form action="/states" enctype="multipart/form-data" method="post">
     <fieldset>
@@ -12,35 +12,74 @@
       <div class="grid-2">
         <label for="path">Path</label>
         <input autofocus
-               class="flex-stretch"
+               {{ if or .PathDuplicate .PathError }}class="error"{{ end }}
                id="path"
                name="path"
                required
                type="text"
                value="{{ .Path }}">
-        {{ if .PathDuplicate }}
-        <span class="error">This path already exist</span>
-        {{ else if .PathError }}
-        <span class="error">A valid URL path beginning with a / is expected.</span>
-        {{ end }}
-        <label for="file" style="min-width: 120px">JSON state file</label>
+        <label for="file" style="min-width:120px;">JSON state file</label>
         <input id="file"
                name="file"
                required
                type="file">
       </div>
-      <button class="primary" type="submit" value="submit">Upload and Create State</button>
+      {{ if .PathDuplicate }}
+      <span class="error">This path already exist.</span>
+      {{ else if .PathError }}
+      <span class="error">
+        Path needs to be a valid
+        <span class="tooltip">
+          absolute
+          <span class="tooltip-text">
+            URL path is considered absolute when it starts with a <code>/</code> character.
+          </span>
+        </span>
+        and
+        <span class="tooltip">
+          clean
+          <span class="tooltip-text">
+            A URL path is considered clean when it has no relative path elements like <code>../</code>, repeated <code>//</code> and when it does not end with a <code>/</code>.
+          </span>
+        </span>
+        URL path.
+      </span>
+      {{ end }}
+      <div style="align-self:stretch; display:flex; justify-content:flex-end;">
+        <button class="primary" type="submit" value="submit">Upload and Create State</button>
+      </div>
     </fieldset>
   </form>
 </div>
-<article aria-role="table" class="grid-3" style="margin-top: 16px; justify-items: stretch;">
-  <span>Path</span>
-  <span>Updated</span>
-  <span>Locked</span>
-  {{ range .States }}
-  <a href="/states/{{ .Id }}">{{ .Path }}</a>
-  <a href="/states/{{ .Id }}">{{ .Updated }}</a>
-  <a href="/states/{{ .Id }}" style="text-align: center;">{{ if eq .Lock nil }}no{{ else }}yes{{ end }}</a>
-  {{ end }}
+<article>
+  <table style="width:100%;">
+    <thead>
+      <tr>
+        <th>Path</th>
+        <th>Updated</th>
+        <th>Locked</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{ range .States }}
+      <tr>
+        <td><a href="/states/{{ .Id }}">{{ .Path }}</a></td>
+        <td>{{ .Updated }}</td>
+        <td style="text-align:center;">
+          {{ if eq .Lock nil }}
+          unlocked
+          {{ else }}
+          <span class="tooltip">
+            locked
+            <span class="tooltip-text">
+              {{ .State.Lock }}
+            </span>
+          </span>
+          {{ end }}
+        </td>
+      </tr>
+      {{ end }}
+    </tbody>
+  </table>
 </article>
 {{ end }}
