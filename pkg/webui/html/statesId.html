@@ -1,28 +1,43 @@
 {{ define "main" }}
+<h1>State</h1>
 <p>
-  Locked:
-  {{ if eq .State.Lock nil }}no{{ else }}
-  <span>yes</span>
-  <div class="tooltip left max">
-    <b>Lock</b>
-    <p>{{ .State.Lock }}</p>
-  </div>
-  {{ end }}
-</p>
-<table class="clickable-rows no-space">
-  <thead>
-    <tr>
-      <th>By</th>
-      <th>Created</th>
-    </tr>
-  </thead>
-  <tbody>
-    {{ range .Versions }}
-    <tr>
-      <td><a href="/versions/{{ .Id }}">{{ index $.Usernames .AccountId.String }}</a></td>
-      <td><a href="/versions/{{ .Id }}">{{ .Created }}</a></td>
-    </tr>
+  The state at path
+  <span class="button">{{ .State.Path }}</span>
+  has
+  <span class="button">{{ len .Versions }}</span>
+  versions and is currently
+  <span class="button">
+    {{ if eq .State.Lock nil }}
+    unlocked
+    {{ else }}
+    <span class="tooltip">
+      locked
+      <span class="tooltip-text">
+        {{ .State.Lock }}
+      </span>
+    </span>
     {{ end }}
-  </tbody>
-</table>
+  </span>
+  .
+</p>
+<p>Use this page to inspect the existing versions.</p>
+<article>
+  <table style="width:100%;">
+    <thead>
+      <tr>
+        <th>Created</th>
+        <th>By</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{ range .Versions }}
+      <tr>
+        <td><a href="/versions/{{ .Id }}">{{ .Created }}</a></td>
+        <td><a href="/accounts/{{ .AccountId.String }}">{{ index $.Usernames .AccountId.String }}</a></td>
+      </tr>
+      {{ end }}
+    </tbody>
+  </table>
+</article>
+<a href="/states">Go back to the states list</a>
 {{ end }}
