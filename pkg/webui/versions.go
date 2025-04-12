@@ -3,7 +3,6 @@ package webui
 import (
 	"html/template"
 	"net/http"
-	"path"
 
 	"git.adyxax.org/adyxax/tfstated/pkg/database"
 	"git.adyxax.org/adyxax/tfstated/pkg/model"
