@@ -5,8 +5,7 @@
     <legend>Account Settings</legend>
     <div style="align-items:center; display:grid; grid-template-columns:1fr 1fr;">
       <label for="dark-mode">Dark mode</label>
-      <input autofocus
-             {{ if not .Settings.LightMode }}checked{{ end }}
+      <input {{ if not .Settings.LightMode }}checked{{ end }}
              id="dark-mode"
              name="dark-mode"
              type="checkbox"

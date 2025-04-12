@@ -10,8 +10,7 @@
       <legend>New User Account</legend>
       <div class="grid-2">
         <label for="username" style="min-width:92px;">Username</label>
-        <input autofocus
-               {{ if or .UsernameDuplicate .UsernameInvalid }}class="error"{{ end }}
+        <input {{ if or .UsernameDuplicate .UsernameInvalid }}class="error"{{ end }}
                id="username"
                name="username"
                required
