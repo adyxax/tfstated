@@ -1,0 +1,66 @@
+---
+name: 'main'
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  main:
+    runs-on: 'self-hosted'
+    steps:
+      - uses: 'actions/checkout@v4'
+      - uses: 'actions/setup-go@v5'
+        with:
+          go-version-file: 'go.mod'
+      - name: 'fmt'
+        run: |
+          make tidy no-dirty
+      - name: 'check'
+        run: |
+          make check no-dirty
+      - name: 'build'
+        run: |
+          make build
+        env:
+          GIT_CRYPT_SECRET: '${{ secrets.GIT_CRYPT }}'
+      #- uses: 'actions/upload-artifact@v4'
+      - uses: 'forgejo/upload-artifact@v4'
+        if: "${{ startsWith(github.ref, 'refs/tags/') }}"
+        with:
+          if-no-files-found: 'error'
+          name: 'tfstated'
+          path: 'tfstated'
+  deploy:
+    if: "${{ startsWith(github.ref, 'refs/tags/') }}"
+    needs:
+      - 'main'
+    runs-on: 'self-hosted'
+    steps:
+      #- uses: 'actions/download-artifact@v4'
+      - uses: 'forgejo/download-artifact@v4'
+        with:
+          name: 'tfstated'
+      - run: |
+          make deploy
+        env:
+          SSH_PRIVATE_KEY: '${{ secrets.SSH_PRIVATE_KEY }}'
+  publish:
+    if: "${{ startsWith(github.ref, 'refs/tags/') }}"
+    needs:
+      - 'main'
+    runs-on: 'self-hosted'
+    steps:
+      #- uses: 'actions/download-artifact@v4'
+      - uses: 'forgejo/download-artifact@v4'
+        with:
+          name: 'tfstated'
+      - uses: 'actions/forgejo-release@v2'
+        with:
+          direction: 'upload'
+          tag: '${{ github.ref_name }}'
+          sha: '${{ github.sha }}'
+          release-dir: './'
+          token: '${{ env.GITHUB_TOKEN }}'
+          hide-archive-link: true
+          prerelease: false
