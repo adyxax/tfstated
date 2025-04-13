@@ -113,6 +113,31 @@ func (db *DB) LoadStateById(stateId uuid.UUID) (*model.State, error) {
 	return &state, nil
 }
 
+func (db *DB) LoadStatePaths() (map[string]string, error) {
+	rows, err := db.Query(
+		`SELECT id, path FROM states;`)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load states from database: %w", err)
+	}
+	defer rows.Close()
+	states := make(map[string]string)
+	for rows.Next() {
+		var (
+			id   string
+			path string
+		)
+		err = rows.Scan(&id, &path)
+		if err != nil {
+			return nil, fmt.Errorf("failed to load state from row: %w", err)
+		}
+		states[id] = path
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("failed to load states from rows: %w", err)
+	}
+	return states, nil
+}
+
 func (db *DB) LoadStates() ([]model.State, error) {
 	rows, err := db.Query(
 		`SELECT created, id, lock, path, updated FROM states;`)

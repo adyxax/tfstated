@@ -20,7 +20,7 @@ type Account struct {
 	Created       time.Time
 	LastLogin     time.Time
 	Settings      json.RawMessage
-	PasswordReset uuid.UUID
+	PasswordReset *uuid.UUID
 }
 
 func (account *Account) CheckPassword(password string) bool {

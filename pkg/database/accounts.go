@@ -49,7 +49,7 @@ func (db *DB) CreateAccount(username string, isAdmin bool) (*model.Account, erro
 		Id:            accountId,
 		Username:      username,
 		IsAdmin:       isAdmin,
-		PasswordReset: passwordReset,
+		PasswordReset: &passwordReset,
 	}, nil
 }
 
@@ -91,7 +91,7 @@ func (db *DB) InitAdminAccount() error {
 
 func (db *DB) LoadAccounts() ([]model.Account, error) {
 	rows, err := db.Query(
-		`SELECT id, username, salt, password_hash, is_admin, created, last_login, settings FROM accounts;`)
+		`SELECT id, username, salt, password_hash, is_admin, created, last_login, settings, password_reset FROM accounts;`)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load accounts from database: %w", err)
 	}
@@ -111,7 +111,8 @@ func (db *DB) LoadAccounts() ([]model.Account, error) {
 			&account.IsAdmin,
 			&created,
 			&lastLogin,
-			&account.Settings)
+			&account.Settings,
+			&account.PasswordReset)
 		if err != nil {
 			return nil, fmt.Errorf("failed to load account from row: %w", err)
 		}
@@ -159,7 +160,7 @@ func (db *DB) LoadAccountById(id uuid.UUID) (*model.Account, error) {
 		lastLogin int64
 	)
 	err := db.QueryRow(
-		`SELECT username, salt, password_hash, is_admin, created, last_login, settings
+		`SELECT username, salt, password_hash, is_admin, created, last_login, settings, password_reset
            FROM accounts
            WHERE id = ?;`,
 		id,
@@ -170,7 +171,7 @@ func (db *DB) LoadAccountById(id uuid.UUID) (*model.Account, error) {
 		&created,
 		&lastLogin,
 		&account.Settings,
-	)
+		&account.PasswordReset)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
@@ -191,7 +192,7 @@ func (db *DB) LoadAccountByUsername(username string) (*model.Account, error) {
 		lastLogin int64
 	)
 	err := db.QueryRow(
-		`SELECT id, salt, password_hash, is_admin, created, last_login, settings
+		`SELECT id, salt, password_hash, is_admin, created, last_login, settings, password_reset
            FROM accounts
            WHERE username = ?;`,
 		username,
@@ -202,7 +203,7 @@ func (db *DB) LoadAccountByUsername(username string) (*model.Account, error) {
 		&created,
 		&lastLogin,
 		&account.Settings,
-	)
+		&account.PasswordReset)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil

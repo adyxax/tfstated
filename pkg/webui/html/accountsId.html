@@ -1,0 +1,92 @@
+{{ define "main" }}
+<h1>User Account</h1>
+{{ if ne .Account.PasswordReset nil }}
+<h2>Password Reset</h2>
+<article>
+Direct the user to <a href="/account/{{ .Account.Id }}/reset/{{ .Account.PasswordReset }}">/account/{{ .Account.Id }}/reset/{{ .Account.PasswordReset }}</a> so that they can create their password.
+</article>
+{{ end }}
+<h2>Status</h2>
+<p>
+  The
+  account
+  <strong>{{ .Account.Username }}</strong>
+  was created on
+  <strong>{{ .Account.Created }}</strong>
+  and
+  {{ if eq .Account.Created .Account.LastLogin }}
+  <strong>never logged in</strong>.
+  {{ else }}
+  last logged in on
+  <strong>{{ .Account.LastLogin }}</strong>.
+  {{ end }}
+</p>
+{{ if .Account.IsAdmin }}
+<p>This accounts has <strong>admin</strong> privileges on TfStated.</p>
+{{ end }}
+<h2>Operations</h2>
+<form action="/accounts/{{ .Account.Id }}" enctype="multipart/form-data" method="post">
+  <div class="flex-row">
+    <fieldset>
+      <legend>Edit User Account</legend>
+      <div class="grid-2">
+        <label for="username" style="min-width:92px;">Username</label>
+        <input {{ if or .UsernameDuplicate .UsernameInvalid }}class="error"{{ end }}
+               id="username"
+               name="username"
+               type="text"
+               value="{{ .Username }}">
+        <label for="is-admin">Is Admin</label>
+        <input {{ if .Account.IsAdmin }} checked{{ end }}
+               id="is-admin"
+               name="is-admin"
+               type="checkbox"
+               value="{{ .IsAdmin }}" />
+      </div>
+      {{ if .UsernameDuplicate }}
+      <span class="error">This username already exist.</span>
+      {{ else if .UsernameInvalid }}
+      <span class="error">
+        <span class="tooltip">
+          Invalid username.
+          <span class="tooltip-text">
+            Username must start with a letter and be composed of only letters, numbers or underscores.
+          </span>
+        </span>
+      </span>
+      {{ end }}
+      <div style="align-self:stretch; display:flex; justify-content:flex-end;">
+        <button type="submit" value="edit">Edit User Account</button>
+      </div>
+    </fieldset>
+    <fieldset>
+      <legend>Danger Zone</legend>
+      <button type="submit" value="delete">Delete User Account</button>
+      <!--<button type="submit" value="lock">Lock User Account</button>-->
+      <button type="submit" value="reset-password">Reset Password</button>
+    </fieldset>
+  </div>
+</form>
+{{ if gt (len .Versions) 0 }}
+<h2>Activity</h2>
+<article>
+  <table style="width:100%;">
+    <thead>
+      <tr>
+        <th>State</th>
+        <th>Created</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{ range .Versions }}
+      <tr>
+        <td><a href="/states/{{ .StateId }}">{{ index $.StatePaths .StateId.String }}</a></td>
+        <td><a href="/versions/{{ .Id }}">{{ .Created }}</a></td>
+      </tr>
+      {{ end }}
+    </tbody>
+  </table>
+</article>
+{{ end }}
+<a href="/accounts">Go back to the user accounts list</a>
+{{ end }}

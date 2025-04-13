@@ -2,7 +2,7 @@
 <h1>User Accounts</h1>
 <div class="flex-row" style="justify-content:space-between;">
   <div style="min-width:240px;">
-    <p>There are <span class=button>{{ len .Accounts }}</span> user accounts.</p>
+    <p>There are <span class="button">{{ len .Accounts }}</span> user accounts.</p>
     <p>Use this page to inspect user accounts or create a new one.</p>
   </div>
   <form action="/accounts" enctype="multipart/form-data" method="post">
@@ -16,6 +16,12 @@
                required
                type="text"
                value="{{ .Username }}">
+        <label for="is-admin">Is Admin</label>
+        <input {{ if .IsAdmin }} checked{{ end }}
+               id="is-admin"
+               name="is-admin"
+               type="checkbox"
+               value="{{ .IsAdmin }}" />
       </div>
       {{ if .UsernameDuplicate }}
       <span class="error">This username already exist.</span>

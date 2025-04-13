@@ -14,6 +14,7 @@ func addRoutes(
 	requireLogin := loginMiddleware(db, requireSession)
 	requireAdmin := adminMiddleware(db, requireLogin)
 	mux.Handle("GET /accounts", requireAdmin(handleAccountsGET(db)))
+	mux.Handle("GET /accounts/{id}", requireAdmin(handleAccountsIdGET(db)))
 	mux.Handle("POST /accounts", requireAdmin(handleAccountsPOST(db)))
 	mux.Handle("GET /healthz", handleHealthz())
 	mux.Handle("GET /login", requireSession(handleLoginGET()))
