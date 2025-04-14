@@ -2,9 +2,12 @@
 <h1>User Accounts</h1>
 <div class="flex-row" style="justify-content:space-between;">
   <div style="min-width:240px;">
-    <p>There are <span class="button">{{ len .Accounts }}</span> user accounts.</p>
-    <p>Use this page to inspect user accounts or create a new one.</p>
+    <p>
+      There are <strong>{{ len .Accounts }}</strong> user accounts.
+      Use this page to inspect user accounts.
+    </p>
   </div>
+  {{ if .Page.IsAdmin }}
   <form action="/accounts" enctype="multipart/form-data" method="post">
     <fieldset>
       <legend>New User Account</legend>
@@ -39,6 +42,7 @@
         <button class="primary" type="submit" value="submit">Create User Account</button>
     </fieldset>
   </form>
+  {{ end }}
 </div>
 <article>
   <table style="width:100%;">

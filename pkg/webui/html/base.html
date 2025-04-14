@@ -28,12 +28,10 @@
           <i class="material-symbols-outlined">settings</i>
           <span>Settings</span>
         </a>
-        {{ if .Page.IsAdmin }}
         <a href="/accounts"{{ if eq .Page.Section "accounts" }} class="primary"{{ end}}>
           <i class="material-symbols-outlined">person</i>
           <span>User Accounts</span>
         </a>
-        {{ end }}
         <hr>
         <a href="/logout">
           <i class="material-symbols-outlined">logout</i>

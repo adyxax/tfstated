@@ -82,8 +82,13 @@ textarea {
     text-overflow: ellipsis;
 }
 input:not([type=image i], [type=range i], [type=checkbox i], [type=radio i]) {
-  overflow: clip !important;
-  overflow-clip-margin: 0 !important;
+    overflow: clip !important;
+    overflow-clip-margin: 0 !important;
+}
+button:disabled, button:disabled:hover {
+    background-color: var(--bg-2);
+    border: 1px solid var(--fg-1);
+    color:var(--dim) !important;
 }
 
 html {
@@ -248,12 +253,11 @@ fieldset {
     padding: 8px;
 }
 button, .button {
-    background-color: var(--bg-2);
-    border: 1px solid var(--orange);
-    color: var(--orange);
     align-items: center;
+    background-color: var(--bg-2);
     border: 1px solid var(--fg-1);
     border-radius: 8px;
+    color: var(--orange);
     display: inline-flex;
     font-size: 16px;
     gap: 8px;
@@ -328,6 +332,10 @@ footer p {
 }
 footer a {
 	color: var(--green);
+}
+strong {
+    color: var(--orange);
+    font-weight: bolder;
 }
 
 @media only screen and (640px <= width < 968px) { /*856*/

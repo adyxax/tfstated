@@ -3,7 +3,7 @@
 {{ if ne .Account.PasswordReset nil }}
 <h2>Password Reset</h2>
 <article>
-Direct the user to <a href="/account/{{ .Account.Id }}/reset/{{ .Account.PasswordReset }}">/account/{{ .Account.Id }}/reset/{{ .Account.PasswordReset }}</a> so that they can create their password.
+  Direct the user to <a href="/account/{{ .Account.Id }}/reset/{{ .Account.PasswordReset }}">/account/{{ .Account.Id }}/reset/{{ .Account.PasswordReset }}</a> so that they can create their password.
 </article>
 {{ end }}
 <h2>Status</h2>
@@ -24,6 +24,7 @@ Direct the user to <a href="/account/{{ .Account.Id }}/reset/{{ .Account.Passwor
 {{ if .Account.IsAdmin }}
 <p>This accounts has <strong>admin</strong> privileges on TfStated.</p>
 {{ end }}
+{{ if .Page.IsAdmin }}
 <h2>Operations</h2>
 <form action="/accounts/{{ .Account.Id }}" enctype="multipart/form-data" method="post">
   <div class="flex-row">
@@ -37,7 +38,8 @@ Direct the user to <a href="/account/{{ .Account.Id }}/reset/{{ .Account.Passwor
                type="text"
                value="{{ .Username }}">
         <label for="is-admin">Is Admin</label>
-        <input {{ if .Account.IsAdmin }} checked{{ end }}
+        <input {{ if .Account.IsAdmin }}checked{{ end }}
+               {{ if eq .Page.AccountId.String .Account.Id.String }}disabled{{ end }}
                id="is-admin"
                name="is-admin"
                type="checkbox"
@@ -61,14 +63,23 @@ Direct the user to <a href="/account/{{ .Account.Id }}/reset/{{ .Account.Passwor
     </fieldset>
     <fieldset>
       <legend>Danger Zone</legend>
-      <button type="submit" value="delete">Delete User Account</button>
+      <button {{ if eq .Page.AccountId.String .Account.Id.String }}disabled{{ end }}
+              type="submit"
+              value="delete">
+        Delete User Account
+      </button>
       <!--<button type="submit" value="lock">Lock User Account</button>-->
-      <button type="submit" value="reset-password">Reset Password</button>
+      <button {{ if or (ne .Account.PasswordReset nil) (eq .Page.AccountId.String .Account.Id.String) }}disabled{{ end }}
+              type="submit"
+              value="reset-password">
+        Reset Password
+      </button>
     </fieldset>
   </div>
 </form>
-{{ if gt (len .Versions) 0 }}
+{{ end }}
 <h2>Activity</h2>
+{{ if gt (len .Versions) 0 }}
 <article>
   <table style="width:100%;">
     <thead>
@@ -87,6 +98,8 @@ Direct the user to <a href="/account/{{ .Account.Id }}/reset/{{ .Account.Passwor
     </tbody>
   </table>
 </article>
+{{ else }}
+<p>This user account has not authored any change currently tracked by TfStated.</p>
 {{ end }}
 <a href="/accounts">Go back to the user accounts list</a>
 {{ end }}

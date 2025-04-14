@@ -2,23 +2,22 @@
 <h1>State</h1>
 <p>
   The state at path
-  <span class="button">{{ .State.Path }}</span>
+  <strong>{{ .State.Path }}</strong>
   has
-  <span class="button">{{ len .Versions }}</span>
+  <strong>{{ len .Versions }}</strong>
   versions and is currently
-  <span class="button">
+  <strong>
     {{ if eq .State.Lock nil }}
-    unlocked
+    unlocked.
     {{ else }}
     <span class="tooltip">
-      locked
+      locked.
       <span class="tooltip-text">
         {{ .State.Lock }}
       </span>
     </span>
     {{ end }}
-  </span>
-  .
+  </strong>
 </p>
 <p>Use this page to inspect the existing versions.</p>
 <article>
