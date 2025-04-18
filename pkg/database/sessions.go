@@ -27,6 +27,14 @@ func (db *DB) CreateSession(account *model.Account) (string, error) {
 	return sessionId.String(), nil
 }
 
+func (db *DB) DeleteExpiredSessions() error {
+	_, err := db.Exec(`DELETE FROM sessions WHERE created < ?`, time.Now().Unix())
+	if err != nil {
+		return fmt.Errorf("failed to delete expired session: %w", err)
+	}
+	return nil
+}
+
 func (db *DB) DeleteSession(session *model.Session) error {
 	_, err := db.Exec(`DELETE FROM sessions WHERE id = ?`, session.Id)
 	if err != nil {

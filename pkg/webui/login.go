@@ -91,6 +91,9 @@ func handleLoginPOST(db *database.DB) http.Handler {
 			SameSite: http.SameSiteStrictMode,
 			Secure:   true,
 		})
+		if err := db.DeleteExpiredSessions(); err != nil {
+			slog.Error("failed to delete expired sessions after user login", "err", err, "accountId", account.Id)
+		}
 		http.Redirect(w, r, "/", http.StatusFound)
 	})
 }
