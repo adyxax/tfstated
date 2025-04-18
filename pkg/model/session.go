@@ -17,6 +17,6 @@ type Session struct {
 }
 
 func (session *Session) IsExpired() bool {
-	// TODO
-	return false
+	expires := session.Created.Add(12 * time.Hour) // 12 hours sessions
+	return time.Now().After(expires)
 }

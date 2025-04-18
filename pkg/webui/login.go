@@ -86,7 +86,7 @@ func handleLoginPOST(db *database.DB) http.Handler {
 			Value:    sessionId,
 			Quoted:   false,
 			Path:     "/",
-			MaxAge:   8 * 3600, // 1 hour sessions
+			MaxAge:   12 * 3600, // 12 hours sessions
 			HttpOnly: true,
 			SameSite: http.SameSiteStrictMode,
 			Secure:   true,
