@@ -3,7 +3,7 @@
 {{ if ne .Account.PasswordReset nil }}
 <h2>Password Reset</h2>
 <article>
-  Direct the user to <a href="/account/{{ .Account.Id }}/reset/{{ .Account.PasswordReset }}">/account/{{ .Account.Id }}/reset/{{ .Account.PasswordReset }}</a> so that they can create their password.
+  Direct the user to <a href="/accounts/{{ .Account.Id }}/reset/{{ .Account.PasswordReset }}">/accounts/{{ .Account.Id }}/reset/{{ .Account.PasswordReset }}</a> so that they can create their password.
 </article>
 {{ end }}
 <h2>Status</h2>

@@ -15,7 +15,7 @@ func errorResponse(w http.ResponseWriter, r *http.Request, status int, err error
 		StatusText string
 	}
 	render(w, errorTemplates, status, &ErrorData{
-		Page:       makePage(r, &Page{Title: "Error", Section: "error"}),
+		Page:       &Page{Title: "Error", Section: "error"},
 		Err:        err,
 		Status:     status,
 		StatusText: http.StatusText(status),

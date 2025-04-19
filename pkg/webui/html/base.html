@@ -19,6 +19,11 @@
           <i class="material-symbols-outlined">login</i>
           <span>Login</span>
         </a>
+        {{ else if eq .Page.Section "error" }}
+        <a href="/">
+          <i class="material-symbols-outlined">mountain_flag</i>
+          <span>TfStated</span>
+        </a>
         {{ else }}
         <a href="/states"{{ if eq .Page.Section "states" }} class="primary"{{ end}}>
           <i class="material-symbols-outlined">home_storage</i>
