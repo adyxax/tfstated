@@ -215,6 +215,27 @@ func (db *DB) LoadAccountByUsername(username string) (*model.Account, error) {
 	return &account, nil
 }
 
+func (db *DB) SaveAccount(account *model.Account) error {
+	_, err := db.Exec(
+		`UPDATE accounts
+           SET username = ?,
+               salt = ?,
+               password_hash = ?,
+               is_admin = ?,
+               password_reset = ?
+           WHERE id = ?`,
+		account.Username,
+		account.Salt,
+		account.PasswordHash,
+		account.IsAdmin,
+		account.PasswordReset,
+		account.Id)
+	if err != nil {
+		return fmt.Errorf("failed to update user id %s: %w", account.Id, err)
+	}
+	return nil
+}
+
 func (db *DB) SaveAccountSettings(account *model.Account, settings *model.Settings) error {
 	data, err := json.Marshal(settings)
 	if err != nil {

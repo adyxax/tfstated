@@ -19,6 +19,11 @@
           <i class="material-symbols-outlined">login</i>
           <span>Login</span>
         </a>
+        {{ else if eq .Page.Section "reset" }}
+        <a href="/login">
+          <i class="material-symbols-outlined">login</i>
+          <span>Login</span>
+        </a>
         {{ else if eq .Page.Section "error" }}
         <a href="/">
           <i class="material-symbols-outlined">mountain_flag</i>
@@ -50,5 +55,6 @@
     </div>
     <footer>
     </footer>
+    <script type="module" src="/static/main.js"></script>
   </body>
 </html>

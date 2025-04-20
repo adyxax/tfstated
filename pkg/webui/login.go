@@ -3,7 +3,6 @@ package webui
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"html/template"
 	"log/slog"
 	"net/http"
@@ -55,8 +54,8 @@ func handleLoginPOST(db *database.DB) http.Handler {
 		username := r.FormValue("username")
 		password := r.FormValue("password")
 
-		if username == "" || password == "" { // the webui cannot issue this
-			errorResponse(w, r, http.StatusBadRequest, fmt.Errorf("Forbidden"))
+		if username == "" || password == "" {
+			errorResponse(w, r, http.StatusBadRequest, nil)
 			return
 		}
 		if ok := validUsername.MatchString(username); !ok {

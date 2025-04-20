@@ -27,3 +27,9 @@ func (account *Account) CheckPassword(password string) bool {
 	hash := helpers.HashPassword(password, account.Salt)
 	return subtle.ConstantTimeCompare(hash, account.PasswordHash) == 1
 }
+
+func (account *Account) SetPassword(password string) {
+	account.Salt = helpers.GenerateSalt()
+	account.PasswordHash = helpers.HashPassword(password, account.Salt)
+	account.PasswordReset = nil
+}
