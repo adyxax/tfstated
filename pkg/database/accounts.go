@@ -231,7 +231,7 @@ func (db *DB) SaveAccount(account *model.Account) error {
 		account.PasswordReset,
 		account.Id)
 	if err != nil {
-		return fmt.Errorf("failed to update user id %s: %w", account.Id, err)
+		return fmt.Errorf("failed to update account id %s: %w", account.Id, err)
 	}
 	return nil
 }

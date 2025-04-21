@@ -13,7 +13,6 @@ import (
 )
 
 type StatesPage struct {
-	ActiveTab     int
 	Page          *Page
 	Path          string
 	PathError     bool
@@ -55,8 +54,7 @@ func handleStatesPOST(db *database.DB) http.Handler {
 		parsedStatePath, err := url.Parse(statePath)
 		if err != nil || path.Clean(parsedStatePath.Path) != statePath || statePath[0] != '/' {
 			render(w, statesTemplates, http.StatusBadRequest, StatesPage{
-				ActiveTab: 1,
-				Page:      makePage(r, &Page{Title: "New State", Section: "states"}),
+				Page:      makePage(r, &Page{Title: "States", Section: "states"}),
 				Path:      statePath,
 				PathError: true,
 				States:    states,
@@ -81,8 +79,7 @@ func handleStatesPOST(db *database.DB) http.Handler {
 		}
 		if version == nil {
 			render(w, statesTemplates, http.StatusBadRequest, StatesPage{
-				ActiveTab:     1,
-				Page:          makePage(r, &Page{Title: "New State", Section: "states"}),
+				Page:          makePage(r, &Page{Title: "State", Section: "states"}),
 				Path:          statePath,
 				PathDuplicate: true,
 				States:        states,
