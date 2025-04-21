@@ -1,5 +1,6 @@
 {{ define "main" }}
-<h1>State</h1>
+<h1>{{ .State.Path }}</h1>
+<h2>Status</h2>
 <p>
   The state at path
   <strong>{{ .State.Path }}</strong>
@@ -18,8 +19,54 @@
     </span>
     {{ end }}
   </strong>
+  Use this page to manage the state or inspect the current and past state versions.
 </p>
-<p>Use this page to inspect the existing versions.</p>
+<h2>Operations</h2>
+<div class="flex-row">
+  <form action="/states/{{ .State.Id }}" method="post">
+    <fieldset>
+      <legend>Edit State</legend>
+      <div class="flex-row">
+        <label for="path">Path</label>
+        <input {{ if or .PathDuplicate .PathError }}class="error"{{ end }}
+               id="path"
+               name="path"
+               required
+               type="text"
+               value="{{ if eq .Path "" }}{{ .State.Path }}{{ else }}{{ .Path }}{{ end }}">
+        <button name="action" type="submit" value="edit">Edit State</button>
+      </div>
+      {{ if .PathDuplicate }}
+      <span class="error">This path already exist.</span>
+      {{ else if .PathError }}
+      <span class="error">
+        Path needs to be a valid
+        <span class="tooltip">
+          absolute
+          <span class="tooltip-text">
+            URL path is considered absolute when it starts with a <code>/</code> character.
+          </span>
+        </span>
+        and
+        <span class="tooltip">
+          clean
+          <span class="tooltip-text">
+            A URL path is considered clean when it has no relative path elements like <code>../</code>, repeated <code>//</code> and when it does not end with a <code>/</code>.
+          </span>
+        </span>
+        URL path.
+      </span>
+      {{ end }}
+    </fieldset>
+  </form>
+  <form action="/states/{{ .State.Id }}" method="post">
+    <fieldset>
+      <legend>Danger Zone</legend>
+      <button action="delete" type="submit" value="delete">Delete State</button>
+    </fieldset>
+  </form>
+</div>
+<h2>Versions</h2>
 <article>
   <table style="width:100%;">
     <thead>
