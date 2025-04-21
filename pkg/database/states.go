@@ -166,6 +166,28 @@ func (db *DB) LoadStates() ([]model.State, error) {
 	return states, nil
 }
 
+// Returns (true, nil) on successful save
+func (db *DB) SaveState(state *model.State) (bool, error) {
+	_, err := db.Exec(
+		`UPDATE states
+           SET lock = ?,
+               path = ?
+           WHERE id = ?`,
+		state.Lock,
+		state.Path,
+		state.Id)
+	if err != nil {
+		var sqliteErr sqlite3.Error
+		if errors.As(err, &sqliteErr) {
+			if sqliteErr.Code == sqlite3.ErrNo(sqlite3.ErrConstraint) {
+				return false, nil
+			}
+		}
+		return false, fmt.Errorf("failed to update state id %s: %w", state.Id, err)
+	}
+	return true, nil
+}
+
 // returns true in case of lock mismatch
 func (db *DB) SetState(path string, accountId uuid.UUID, data []byte, lock string) (bool, error) {
 	encryptedData, err := db.dataEncryptionKey.EncryptAES256(data)

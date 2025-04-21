@@ -27,6 +27,7 @@ func addRoutes(
 	mux.Handle("GET /states", requireLogin(handleStatesGET(db)))
 	mux.Handle("POST /states", requireLogin(handleStatesPOST(db)))
 	mux.Handle("GET /states/{id}", requireLogin(handleStatesIdGET(db)))
+	mux.Handle("POST /states/{id}", requireLogin(handleStatesIdPOST(db)))
 	mux.Handle("GET /static/", cache(http.FileServer(http.FS(staticFS))))
 	mux.Handle("GET /versions/{id}", requireLogin(handleVersionsGET(db)))
 	mux.Handle("GET /", requireLogin(handleIndexGET()))
