@@ -1,4 +1,4 @@
 cover.out
-tfstate.db
-tfstate.db-shm
-tfstate.db-wal
+tfstated.db
+tfstated.db-shm
+tfstated.db-wal

@@ -69,7 +69,7 @@ func main() {
 
 	db, err := database.NewDB(
 		ctx,
-		"./tfstate.db?_txlock=immediate",
+		"./tfstated.db?_txlock=immediate",
 		os.Getenv,
 	)
 	if err != nil {
