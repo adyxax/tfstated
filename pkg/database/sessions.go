@@ -2,29 +2,28 @@ package database
 
 import (
 	"database/sql"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"time"
 
 	"git.adyxax.org/adyxax/tfstated/pkg/model"
-	"go.n16f.net/uuid"
+	"git.adyxax.org/adyxax/tfstated/pkg/scrypto"
 )
 
 func (db *DB) CreateSession(account *model.Account) (string, error) {
-	var sessionId uuid.UUID
-	if err := sessionId.Generate(uuid.V4); err != nil {
-		return "", fmt.Errorf("failed to generate session id: %w", err)
-	}
+	sessionBytes := scrypto.RandomBytes(32)
+	sessionId := base64.RawURLEncoding.EncodeToString(sessionBytes[:])
 	if _, err := db.Exec(
 		`INSERT INTO sessions(id, account_id, data)
 		   VALUES (?, ?, ?);`,
-		sessionId.String(),
+		sessionId,
 		account.Id,
 		"",
 	); err != nil {
 		return "", fmt.Errorf("failed insert new session in database: %w", err)
 	}
-	return sessionId.String(), nil
+	return sessionId, nil
 }
 
 func (db *DB) DeleteExpiredSessions() error {

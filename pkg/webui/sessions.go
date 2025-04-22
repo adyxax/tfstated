@@ -21,7 +21,7 @@ func sessionsMiddleware(db *database.DB) func(http.Handler) http.Handler {
 				return
 			}
 			if err == nil {
-				if len(cookie.Value) != 36 {
+				if len(cookie.Value) != 43 {
 					unsetSesssionCookie(w)
 				} else {
 					session, err := db.LoadSessionById(cookie.Value)
