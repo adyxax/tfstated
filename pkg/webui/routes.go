@@ -10,8 +10,8 @@ func addRoutes(
 	mux *http.ServeMux,
 	db *database.DB,
 ) {
-	requireSession := sessionsMiddleware(db)
-	requireLogin := loginMiddleware(db, requireSession)
+	processSession := sessionsMiddleware(db)
+	requireLogin := loginMiddleware(db, processSession)
 	requireAdmin := adminMiddleware(db, requireLogin)
 	mux.Handle("GET /accounts", requireLogin(handleAccountsGET(db)))
 	mux.Handle("GET /accounts/{id}", requireLogin(handleAccountsIdGET(db)))
@@ -19,8 +19,8 @@ func addRoutes(
 	mux.Handle("POST /accounts/{id}/reset/{token}", handleAccountsIdResetPasswordPOST(db))
 	mux.Handle("POST /accounts", requireAdmin(handleAccountsPOST(db)))
 	mux.Handle("GET /healthz", handleHealthz())
-	mux.Handle("GET /login", requireSession(handleLoginGET()))
-	mux.Handle("POST /login", requireSession(handleLoginPOST(db)))
+	mux.Handle("GET /login", processSession(handleLoginGET()))
+	mux.Handle("POST /login", processSession(handleLoginPOST(db)))
 	mux.Handle("GET /logout", requireLogin(handleLogoutGET(db)))
 	mux.Handle("GET /settings", requireLogin(handleSettingsGET(db)))
 	mux.Handle("POST /settings", requireLogin(handleSettingsPOST(db)))

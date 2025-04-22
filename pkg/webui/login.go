@@ -97,9 +97,9 @@ func handleLoginPOST(db *database.DB) http.Handler {
 	})
 }
 
-func loginMiddleware(db *database.DB, requireSession func(http.Handler) http.Handler) func(http.Handler) http.Handler {
+func loginMiddleware(db *database.DB, processSession func(http.Handler) http.Handler) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
-		return requireSession(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		return processSession(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Cache-Control", "no-store, no-cache")
 			session := r.Context().Value(model.SessionContextKey{})
 			if session == nil {
