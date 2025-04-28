@@ -8,8 +8,9 @@ import (
 )
 
 const (
-	PBKDF2Iterations = 600000
-	SaltSize         = 32
+	PBKDF2PasswordIterations = 600000
+	PBKDF2SessionIterations  = 12
+	SaltSize                 = 32
 )
 
 func GenerateSalt() []byte {
@@ -17,5 +18,9 @@ func GenerateSalt() []byte {
 }
 
 func HashPassword(password string, salt []byte) []byte {
-	return pbkdf2.Key([]byte(password), salt, PBKDF2Iterations, 32, sha256.New)
+	return pbkdf2.Key([]byte(password), salt, PBKDF2PasswordIterations, 32, sha256.New)
+}
+
+func HashSessionId(id []byte, salt []byte) []byte {
+	return pbkdf2.Key(id, salt, PBKDF2SessionIterations, 32, sha256.New)
 }

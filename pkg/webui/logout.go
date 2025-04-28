@@ -1,6 +1,7 @@
 package webui
 
 import (
+	"fmt"
 	"html/template"
 	"net/http"
 
@@ -12,18 +13,19 @@ var logoutTemplate = template.Must(template.ParseFS(htmlFS, "html/base.html", "h
 
 func handleLogoutGET(db *database.DB) http.Handler {
 	type logoutPage struct {
-		Page
+		Page *Page
 	}
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		session := r.Context().Value(model.SessionContextKey{})
-		err := db.DeleteSession(session.(*model.Session))
+		session := r.Context().Value(model.SessionContextKey{}).(*model.Session)
+		sessionId, err := db.MigrateSession(session, nil)
 		if err != nil {
-			errorResponse(w, r, http.StatusInternalServerError, err)
+			errorResponse(w, r, http.StatusInternalServerError,
+				fmt.Errorf("failed to migrate session: %w", err))
 			return
 		}
-		unsetSesssionCookie(w)
+		setSessionCookie(w, sessionId)
 		render(w, logoutTemplate, http.StatusOK, logoutPage{
-			Page: Page{Title: "Logout", Section: "login"},
+			Page: makePage(r, &Page{Title: "Logout", Section: "login"}),
 		})
 	})
 }

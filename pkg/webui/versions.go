@@ -39,7 +39,7 @@ func handleVersionsGET(db *database.DB) http.Handler {
 			errorResponse(w, r, http.StatusInternalServerError, err)
 			return
 		}
-		account, err := db.LoadAccountById(version.AccountId)
+		account, err := db.LoadAccountById(&version.AccountId)
 		if err != nil {
 			errorResponse(w, r, http.StatusInternalServerError, err)
 			return

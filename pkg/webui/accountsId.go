@@ -29,7 +29,7 @@ func handleAccountsIdGET(db *database.DB) http.Handler {
 			errorResponse(w, r, http.StatusBadRequest, err)
 			return
 		}
-		account, err := db.LoadAccountById(accountId)
+		account, err := db.LoadAccountById(&accountId)
 		if err != nil {
 			errorResponse(w, r, http.StatusInternalServerError, err)
 			return

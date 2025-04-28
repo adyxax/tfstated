@@ -2,7 +2,7 @@ package webui
 
 import (
 	"context"
-	"encoding/json"
+	"fmt"
 	"html/template"
 	"log/slog"
 	"net/http"
@@ -26,29 +26,30 @@ func handleLoginGET() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Cache-Control", "no-store, no-cache")
 
-		session := r.Context().Value(model.SessionContextKey{})
-		if session != nil {
+		account := r.Context().Value(model.AccountContextKey{})
+		if account != nil {
 			http.Redirect(w, r, "/states", http.StatusFound)
 			return
 		}
 
 		render(w, loginTemplate, http.StatusOK, loginPage{
-			Page: &Page{Title: "Login", Section: "login"},
+			Page: makePage(r, &Page{Title: "Login", Section: "login"}),
 		})
 	})
 }
 
 func handleLoginPOST(db *database.DB) http.Handler {
-	renderForbidden := func(w http.ResponseWriter, username string) {
+	renderForbidden := func(w http.ResponseWriter, r *http.Request, username string) {
 		render(w, loginTemplate, http.StatusForbidden, loginPage{
-			Page:      &Page{Title: "Login", Section: "login"},
+			Page:      makePage(r, &Page{Title: "Login", Section: "login"}),
 			Forbidden: true,
 			Username:  username,
 		})
 	}
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if err := r.ParseForm(); err != nil {
-			errorResponse(w, r, http.StatusBadRequest, err)
+			errorResponse(w, r, http.StatusBadRequest,
+				fmt.Errorf("failed to parse form: %w", err))
 			return
 		}
 		username := r.FormValue("username")
@@ -59,37 +60,32 @@ func handleLoginPOST(db *database.DB) http.Handler {
 			return
 		}
 		if ok := validUsername.MatchString(username); !ok {
-			renderForbidden(w, username)
+			renderForbidden(w, r, username)
 			return
 		}
 		account, err := db.LoadAccountByUsername(username)
 		if err != nil {
-			errorResponse(w, r, http.StatusInternalServerError, err)
+			errorResponse(w, r, http.StatusInternalServerError,
+				fmt.Errorf("failed to load account by username %s: %w", username, err))
 			return
 		}
 		if account == nil || !account.CheckPassword(password) {
-			renderForbidden(w, username)
+			renderForbidden(w, r, username)
 			return
 		}
 		if err := db.TouchAccount(account); err != nil {
-			errorResponse(w, r, http.StatusInternalServerError, err)
+			errorResponse(w, r, http.StatusInternalServerError,
+				fmt.Errorf("failed to touch account %s: %w", username, err))
 			return
 		}
-		sessionId, err := db.CreateSession(account)
+		session := r.Context().Value(model.SessionContextKey{}).(*model.Session)
+		sessionId, err := db.MigrateSession(session, account)
 		if err != nil {
-			errorResponse(w, r, http.StatusInternalServerError, err)
+			errorResponse(w, r, http.StatusInternalServerError,
+				fmt.Errorf("failed to migrate session: %w", err))
 			return
 		}
-		http.SetCookie(w, &http.Cookie{
-			Name:     cookieName,
-			Value:    sessionId,
-			Quoted:   false,
-			Path:     "/",
-			MaxAge:   12 * 3600, // 12 hours sessions
-			HttpOnly: true,
-			SameSite: http.SameSiteStrictMode,
-			Secure:   true,
-		})
+		setSessionCookie(w, sessionId)
 		if err := db.DeleteExpiredSessions(); err != nil {
 			slog.Error("failed to delete expired sessions after user login", "err", err, "accountId", account.Id)
 		}
@@ -97,32 +93,26 @@ func handleLoginPOST(db *database.DB) http.Handler {
 	})
 }
 
-func loginMiddleware(db *database.DB, processSession func(http.Handler) http.Handler) func(http.Handler) http.Handler {
+func loginMiddleware(db *database.DB, requireSession func(http.Handler) http.Handler) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
-		return processSession(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		return requireSession(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Cache-Control", "no-store, no-cache")
-			session := r.Context().Value(model.SessionContextKey{})
-			if session == nil {
+			session := r.Context().Value(model.SessionContextKey{}).(*model.Session)
+			if session.AccountId == nil {
 				http.Redirect(w, r, "/login", http.StatusFound)
 				return
 			}
-			account, err := db.LoadAccountById(session.(*model.Session).AccountId)
+			account, err := db.LoadAccountById(session.AccountId)
 			if err != nil {
-				errorResponse(w, r, http.StatusInternalServerError, err)
+				errorResponse(w, r, http.StatusInternalServerError,
+					fmt.Errorf("failed to load account by Id: %w", err))
 				return
 			}
 			if account == nil {
-				// this could happen if the account was deleted in the short
-				// time between retrieving the session and here
 				http.Redirect(w, r, "/login", http.StatusFound)
 				return
 			}
 			ctx := context.WithValue(r.Context(), model.AccountContextKey{}, account)
-			var settings model.Settings
-			if err := json.Unmarshal(account.Settings, &settings); err != nil {
-				slog.Error("failed to unmarshal account settings", "err", err, "accountId", account.Id)
-			}
-			ctx = context.WithValue(ctx, model.SettingsContextKey{}, &settings)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		}))
 	}

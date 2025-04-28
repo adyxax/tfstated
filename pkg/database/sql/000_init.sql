@@ -16,12 +16,11 @@ CREATE TABLE accounts (
 CREATE UNIQUE INDEX accounts_username on accounts(username);
 
 CREATE TABLE sessions (
-  id TEXT PRIMARY KEY,
-  account_id TEXT NOT NULL,
+  id BLOB PRIMARY KEY,
+  account_id TEXT,
   created INTEGER NOT NULL DEFAULT (unixepoch()),
   updated INTEGER NOT NULL DEFAULT (unixepoch()),
-  data TEXT NOT NULL,
-  FOREIGN KEY(account_id) REFERENCES accounts(id) ON DELETE CASCADE
+  settings BLOB NOT NULL
 ) STRICT;
 
 CREATE TABLE states (

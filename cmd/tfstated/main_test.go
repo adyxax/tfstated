@@ -26,13 +26,15 @@ var adminPasswordMutex sync.Mutex
 func TestMain(m *testing.M) {
 	getenv := func(key string) string {
 		switch key {
-		case "DATA_ENCRYPTION_KEY":
+		case "TFSTATED_DATA_ENCRYPTION_KEY":
 			return "hP3ZSCnY3LMgfTQjwTaGrhKwdA0yXMXIfv67OJnntqM="
 		case "TFSTATED_HOST":
 			return "127.0.0.1"
 		case "TFSTATED_PORT":
 			return "8082"
-		case "VERSIONS_HISTORY_LIMIT":
+		case "TFSTATED_SESSIONS_SALT":
+			return "a528D1m9q3IZxLinSmHmeKxrx3Pmm7GQ3nBzIDxjr0A="
+		case "TFSTATED_VERSIONS_HISTORY_LIMIT":
 			return "3"
 		default:
 			return ""

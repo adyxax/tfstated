@@ -2,3 +2,5 @@ cover.out
 tfstated.db
 tfstated.db-shm
 tfstated.db-wal
+tfstated_data_encryption_key
+tfstated_sessions_salt

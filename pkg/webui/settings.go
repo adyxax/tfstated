@@ -1,6 +1,7 @@
 package webui
 
 import (
+	"context"
 	"html/template"
 	"net/http"
 
@@ -41,8 +42,8 @@ func handleSettingsPOST(db *database.DB) http.Handler {
 			errorResponse(w, r, http.StatusInternalServerError, err)
 			return
 		}
-		page := makePage(r, &Page{Title: "Settings", Section: "settings"})
-		page.LightMode = settings.LightMode
+		ctx := context.WithValue(r.Context(), model.SettingsContextKey{}, &settings)
+		page := makePage(r.WithContext(ctx), &Page{Title: "Settings", Section: "settings"})
 		render(w, settingsTemplates, http.StatusOK, SettingsPage{
 			Page:     page,
 			Settings: &settings,

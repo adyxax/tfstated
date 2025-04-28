@@ -1,6 +1,7 @@
 package model
 
 import (
+	"encoding/json"
 	"time"
 
 	"go.n16f.net/uuid"
@@ -9,11 +10,11 @@ import (
 type SessionContextKey struct{}
 
 type Session struct {
-	Id        string
-	AccountId uuid.UUID
+	Id        []byte
+	AccountId *uuid.UUID
 	Created   time.Time
 	Updated   time.Time
-	Data      any
+	Settings  json.RawMessage
 }
 
 func (session *Session) IsExpired() bool {

@@ -31,6 +31,7 @@ type DB struct {
 	ctx                  context.Context
 	dataEncryptionKey    scrypto.AES256Key
 	readDB               *sql.DB
+	sessionsSalt         scrypto.AES256Key
 	versionsHistoryLimit int
 	writeDB              *sql.DB
 }
@@ -82,17 +83,24 @@ func NewDB(ctx context.Context, url string, getenv func(string) string) (*DB, er
 		return nil, fmt.Errorf("failed to migrate: %w", err)
 	}
 
-	dataEncryptionKey := getenv("DATA_ENCRYPTION_KEY")
+	dataEncryptionKey := getenv("TFSTATED_DATA_ENCRYPTION_KEY")
 	if dataEncryptionKey == "" {
-		return nil, fmt.Errorf("the DATA_ENCRYPTION_KEY environment variable is not set")
+		return nil, fmt.Errorf("the TFSTATED_DATA_ENCRYPTION_KEY environment variable is not set")
 	}
 	if err := db.dataEncryptionKey.FromBase64(dataEncryptionKey); err != nil {
-		return nil, fmt.Errorf("failed to decode the DATA_ENCRYPTION_KEY environment variable, expected base64: %w", err)
+		return nil, fmt.Errorf("failed to decode the TFSTATED_DATA_ENCRYPTION_KEY environment variable, expected 32 bytes base64 encoded: %w", err)
 	}
-	versionsHistoryLimit := getenv("VERSIONS_HISTORY_LIMIT")
+	sessionsSalt := getenv("TFSTATED_SESSIONS_SALT")
+	if sessionsSalt == "" {
+		return nil, fmt.Errorf("the TFSTATED_SESSIONS_SALT environment variable is not set")
+	}
+	if err := db.sessionsSalt.FromBase64(dataEncryptionKey); err != nil {
+		return nil, fmt.Errorf("failed to decode the TFSTATED_SESSIONS_SALT environment variable, expected 32 bytes base64 encoded: %w", err)
+	}
+	versionsHistoryLimit := getenv("TFSTATED_VERSIONS_HISTORY_LIMIT")
 	if versionsHistoryLimit != "" {
 		if db.versionsHistoryLimit, err = strconv.Atoi(versionsHistoryLimit); err != nil {
-			return nil, fmt.Errorf("failed to parse the VERSIONS_HISTORY_LIMIT environment variable, expected an integer: %w", err)
+			return nil, fmt.Errorf("failed to parse the TFSTATED_VERSIONS_HISTORY_LIMIT environment variable, expected an integer: %w", err)
 		}
 	}
 

@@ -30,7 +30,7 @@ func processAccountsIdResetPasswordPathValues(db *database.DB, w http.ResponseWr
 		errorResponse(w, r, http.StatusBadRequest, err)
 		return nil, false
 	}
-	account, err := db.LoadAccountById(accountId)
+	account, err := db.LoadAccountById(&accountId)
 	if err != nil {
 		errorResponse(w, r, http.StatusInternalServerError, err)
 		return nil, false
@@ -55,7 +55,7 @@ func handleAccountsIdResetPasswordGET(db *database.DB) http.Handler {
 		render(w, accountsIdResetPasswordTemplates, http.StatusOK,
 			AccountsIdResetPasswordPage{
 				Account: account,
-				Page:    &Page{Title: "Password Reset", Section: "reset"},
+				Page:    makePage(r, &Page{Title: "Password Reset", Section: "reset"}),
 				Token:   r.PathValue("token"),
 			})
 	})
@@ -80,7 +80,7 @@ func handleAccountsIdResetPasswordPOST(db *database.DB) http.Handler {
 		render(w, accountsIdResetPasswordTemplates, http.StatusOK,
 			AccountsIdResetPasswordPage{
 				Account:         account,
-				Page:            &Page{Title: "Password Reset", Section: "reset"},
+				Page:            makePage(r, &Page{Title: "Password Reset", Section: "reset"}),
 				PasswordChanged: true,
 			})
 	})

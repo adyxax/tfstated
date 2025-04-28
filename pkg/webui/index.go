@@ -9,7 +9,7 @@ import (
 )
 
 type Page struct {
-	AccountId uuid.UUID
+	AccountId *uuid.UUID
 	IsAdmin   bool
 	LightMode bool
 	Section   string
@@ -17,9 +17,12 @@ type Page struct {
 }
 
 func makePage(r *http.Request, page *Page) *Page {
-	account := r.Context().Value(model.AccountContextKey{}).(*model.Account)
-	page.AccountId = account.Id
-	page.IsAdmin = account.IsAdmin
+	accountCtx := r.Context().Value(model.AccountContextKey{})
+	if accountCtx != nil {
+		account := accountCtx.(*model.Account)
+		page.AccountId = &account.Id
+		page.IsAdmin = account.IsAdmin
+	}
 	settings := r.Context().Value(model.SettingsContextKey{}).(*model.Settings)
 	page.LightMode = settings.LightMode
 	return page

@@ -151,9 +151,12 @@ func (db *DB) LoadAccountUsernames() (map[string]string, error) {
 	return accounts, nil
 }
 
-func (db *DB) LoadAccountById(id uuid.UUID) (*model.Account, error) {
+func (db *DB) LoadAccountById(id *uuid.UUID) (*model.Account, error) {
+	if id == nil {
+		return nil, nil
+	}
 	account := model.Account{
-		Id: id,
+		Id: *id,
 	}
 	var (
 		created   int64
@@ -239,11 +242,15 @@ func (db *DB) SaveAccount(account *model.Account) error {
 func (db *DB) SaveAccountSettings(account *model.Account, settings *model.Settings) error {
 	data, err := json.Marshal(settings)
 	if err != nil {
-		return fmt.Errorf("failed to marshal settings for user %s: %w", account.Username, err)
+		return fmt.Errorf("failed to marshal settings for user account %s: %w", account.Username, err)
 	}
 	_, err = db.Exec(`UPDATE accounts SET settings = ? WHERE id = ?`, data, account.Id)
 	if err != nil {
-		return fmt.Errorf("failed to update settings for user %s: %w", account.Username, err)
+		return fmt.Errorf("failed to update account settings for user account %s: %w", account.Username, err)
+	}
+	_, err = db.Exec(`UPDATE sessions SET settings = ? WHERE account_id = ?`, data, account.Id)
+	if err != nil {
+		return fmt.Errorf("failed to update account settings for user account %s: %w", account.Username, err)
 	}
 	return nil
 }
