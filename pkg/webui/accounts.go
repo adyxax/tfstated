@@ -11,7 +11,6 @@ import (
 
 type AccountsPage struct {
 	Accounts          []model.Account
-	ActiveTab         int
 	IsAdmin           string
 	Page              *Page
 	Username          string
@@ -45,11 +44,10 @@ func handleAccountsPOST(db *database.DB) http.Handler {
 		accountUsername := r.FormValue("username")
 		isAdmin := r.FormValue("isAdmin")
 		page := AccountsPage{
-			ActiveTab: 1,
-			Page:      makePage(r, &Page{Title: "New Account", Section: "accounts"}),
-			Accounts:  accounts,
-			IsAdmin:   isAdmin,
-			Username:  accountUsername,
+			Page:     makePage(r, &Page{Title: "New Account", Section: "accounts"}),
+			Accounts: accounts,
+			IsAdmin:  isAdmin,
+			Username: accountUsername,
 		}
 		if ok := validUsername.MatchString(accountUsername); !ok {
 			page.UsernameInvalid = true

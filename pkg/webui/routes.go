@@ -11,8 +11,8 @@ func addRoutes(
 	db *database.DB,
 ) {
 	requireSession := sessionsMiddleware(db)
-	requireLogin := loginMiddleware(db, requireSession)
-	requireAdmin := adminMiddleware(db, requireLogin)
+	requireLogin := loginMiddleware(requireSession)
+	requireAdmin := adminMiddleware(requireLogin)
 	mux.Handle("GET /accounts", requireLogin(handleAccountsGET(db)))
 	mux.Handle("GET /accounts/{id}", requireLogin(handleAccountsIdGET(db)))
 	mux.Handle("GET /accounts/{id}/reset/{token}", requireSession(handleAccountsIdResetPasswordGET(db)))

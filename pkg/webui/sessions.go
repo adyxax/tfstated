@@ -2,10 +2,8 @@ package webui
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"log/slog"
 	"net/http"
 
 	"git.adyxax.org/adyxax/tfstated/pkg/database"
@@ -40,26 +38,20 @@ func sessionsMiddleware(db *database.DB) func(http.Handler) http.Handler {
 							}
 						} else {
 							ctx := context.WithValue(r.Context(), model.SessionContextKey{}, session)
-							var settings model.Settings
-							if err := json.Unmarshal(session.Settings, &settings); err != nil {
-								slog.Error("failed to unmarshal session settings", "err", err)
-							}
-							ctx = context.WithValue(ctx, model.SettingsContextKey{}, &settings)
 							next.ServeHTTP(w, r.WithContext(ctx))
 							return
 						}
 					}
 				}
 			}
-			sessionId, err := db.CreateSession(nil, nil)
+			sessionId, session, err := db.CreateSession(nil)
 			if err != nil {
 				errorResponse(w, r, http.StatusInternalServerError,
 					fmt.Errorf("failed to create session: %w", err))
 				return
 			}
 			setSessionCookie(w, sessionId)
-			var settings model.Settings
-			ctx := context.WithValue(r.Context(), model.SettingsContextKey{}, &settings)
+			ctx := context.WithValue(r.Context(), model.SessionContextKey{}, session)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}

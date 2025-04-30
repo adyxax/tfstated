@@ -5,26 +5,16 @@ import (
 	"net/http"
 
 	"git.adyxax.org/adyxax/tfstated/pkg/model"
-	"go.n16f.net/uuid"
 )
 
 type Page struct {
-	AccountId *uuid.UUID
-	IsAdmin   bool
-	LightMode bool
-	Section   string
-	Title     string
+	Section string
+	Session *model.Session
+	Title   string
 }
 
 func makePage(r *http.Request, page *Page) *Page {
-	accountCtx := r.Context().Value(model.AccountContextKey{})
-	if accountCtx != nil {
-		account := accountCtx.(*model.Account)
-		page.AccountId = &account.Id
-		page.IsAdmin = account.IsAdmin
-	}
-	settings := r.Context().Value(model.SettingsContextKey{}).(*model.Settings)
-	page.LightMode = settings.LightMode
+	page.Session = r.Context().Value(model.SessionContextKey{}).(*model.Session)
 	return page
 }
 

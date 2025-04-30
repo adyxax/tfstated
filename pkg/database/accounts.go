@@ -29,7 +29,7 @@ func (db *DB) CreateAccount(username string, isAdmin bool) (*model.Account, erro
 		return nil, fmt.Errorf("failed to generate password reset uuid: %w", err)
 	}
 	_, err := db.Exec(`INSERT INTO accounts(id, username, is_Admin, settings, password_reset)
-                              VALUES (?, ?, ?, ?, ?);`,
+                              VALUES (?, ?, ?, jsonb(?), ?);`,
 		accountId,
 		username,
 		isAdmin,
@@ -72,7 +72,7 @@ func (db *DB) InitAdminAccount() error {
 			hash := helpers.HashPassword(password.String(), salt)
 			if _, err := tx.ExecContext(db.ctx,
 				`INSERT INTO accounts(id, username, salt, password_hash, is_admin, settings)
-		       VALUES (:id, "admin", :salt, :hash, TRUE, :settings)
+		       VALUES (:id, "admin", :salt, :hash, TRUE, jsonb(:settings))
 		       ON CONFLICT DO UPDATE SET password_hash = :hash
 		         WHERE username = "admin";`,
 				sql.Named("id", accountId),
@@ -91,7 +91,8 @@ func (db *DB) InitAdminAccount() error {
 
 func (db *DB) LoadAccounts() ([]model.Account, error) {
 	rows, err := db.Query(
-		`SELECT id, username, salt, password_hash, is_admin, created, last_login, settings, password_reset FROM accounts;`)
+		`SELECT id, username, salt, password_hash, is_admin, created, last_login,
+                json_extract(settings, '$'), password_reset FROM accounts;`)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load accounts from database: %w", err)
 	}
@@ -102,6 +103,7 @@ func (db *DB) LoadAccounts() ([]model.Account, error) {
 			account   model.Account
 			created   int64
 			lastLogin int64
+			settings  []byte
 		)
 		err = rows.Scan(
 			&account.Id,
@@ -111,10 +113,13 @@ func (db *DB) LoadAccounts() ([]model.Account, error) {
 			&account.IsAdmin,
 			&created,
 			&lastLogin,
-			&account.Settings,
+			&settings,
 			&account.PasswordReset)
 		if err != nil {
 			return nil, fmt.Errorf("failed to load account from row: %w", err)
+		}
+		if err := json.Unmarshal(settings, &account.Settings); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal account settings: %w", err)
 		}
 		account.Created = time.Unix(created, 0)
 		account.LastLogin = time.Unix(lastLogin, 0)
@@ -161,9 +166,11 @@ func (db *DB) LoadAccountById(id *uuid.UUID) (*model.Account, error) {
 	var (
 		created   int64
 		lastLogin int64
+		settings  []byte
 	)
 	err := db.QueryRow(
-		`SELECT username, salt, password_hash, is_admin, created, last_login, settings, password_reset
+		`SELECT username, salt, password_hash, is_admin, created, last_login,
+                json_extract(settings, '$'), password_reset
            FROM accounts
            WHERE id = ?;`,
 		id,
@@ -173,13 +180,16 @@ func (db *DB) LoadAccountById(id *uuid.UUID) (*model.Account, error) {
 		&account.IsAdmin,
 		&created,
 		&lastLogin,
-		&account.Settings,
+		&settings,
 		&account.PasswordReset)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
 		}
 		return nil, fmt.Errorf("failed to load account by id %s: %w", id, err)
+	}
+	if err := json.Unmarshal(settings, &account.Settings); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal account settings: %w", err)
 	}
 	account.Created = time.Unix(created, 0)
 	account.LastLogin = time.Unix(lastLogin, 0)
@@ -193,9 +203,11 @@ func (db *DB) LoadAccountByUsername(username string) (*model.Account, error) {
 	var (
 		created   int64
 		lastLogin int64
+		settings  []byte
 	)
 	err := db.QueryRow(
-		`SELECT id, salt, password_hash, is_admin, created, last_login, settings, password_reset
+		`SELECT id, salt, password_hash, is_admin, created, last_login,
+                json_extract(settings, '$'), password_reset
            FROM accounts
            WHERE username = ?;`,
 		username,
@@ -205,13 +217,16 @@ func (db *DB) LoadAccountByUsername(username string) (*model.Account, error) {
 		&account.IsAdmin,
 		&created,
 		&lastLogin,
-		&account.Settings,
+		&settings,
 		&account.PasswordReset)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
 		}
 		return nil, fmt.Errorf("failed to load account by username %s: %w", username, err)
+	}
+	if err := json.Unmarshal(settings, &account.Settings); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal account settings: %w", err)
 	}
 	account.Created = time.Unix(created, 0)
 	account.LastLogin = time.Unix(lastLogin, 0)
@@ -242,13 +257,20 @@ func (db *DB) SaveAccount(account *model.Account) error {
 func (db *DB) SaveAccountSettings(account *model.Account, settings *model.Settings) error {
 	data, err := json.Marshal(settings)
 	if err != nil {
-		return fmt.Errorf("failed to marshal settings for user account %s: %w", account.Username, err)
+		return fmt.Errorf("failed to marshal settings for user accont %s: %w", account.Username, err)
 	}
 	_, err = db.Exec(`UPDATE accounts SET settings = ? WHERE id = ?`, data, account.Id)
 	if err != nil {
 		return fmt.Errorf("failed to update account settings for user account %s: %w", account.Username, err)
 	}
-	_, err = db.Exec(`UPDATE sessions SET settings = ? WHERE account_id = ?`, data, account.Id)
+	_, err = db.Exec(
+		`UPDATE sessions
+           SET data = jsonb_replace(data,
+                                    '$.settings', jsonb(:data),
+                                    '$.account.settings', jsonb(:data))
+           WHERE data->'account'->>'id' = :id`,
+		sql.Named("data", data),
+		sql.Named("id", account.Id))
 	if err != nil {
 		return fmt.Errorf("failed to update account settings for user account %s: %w", account.Username, err)
 	}

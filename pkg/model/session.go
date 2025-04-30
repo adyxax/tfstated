@@ -1,20 +1,40 @@
 package model
 
 import (
-	"encoding/json"
+	"fmt"
 	"time"
 
 	"go.n16f.net/uuid"
 )
 
+type SessionData struct {
+	Account   *Account  `json:"account"`
+	CsrfToken uuid.UUID `json:"csrf_token"`
+	Settings  *Settings `json:"settings"`
+}
+
+func NewSessionData(account *Account, previousSessionSettings *Settings) (*SessionData, error) {
+	data := SessionData{Account: account}
+	if err := data.CsrfToken.Generate(uuid.V4); err != nil {
+		return nil, fmt.Errorf("failed to generate csrf token uuid: %w", err)
+	}
+	if account != nil {
+		data.Settings = account.Settings
+	} else if previousSessionSettings != nil {
+		data.Settings = previousSessionSettings
+	} else {
+		data.Settings = &Settings{}
+	}
+	return &data, nil
+}
+
 type SessionContextKey struct{}
 
 type Session struct {
-	Id        []byte
-	AccountId *uuid.UUID
-	Created   time.Time
-	Updated   time.Time
-	Settings  json.RawMessage
+	Id      []byte
+	Created time.Time
+	Updated time.Time
+	Data    *SessionData
 }
 
 func (session *Session) IsExpired() bool {

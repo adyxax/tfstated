@@ -18,10 +18,8 @@ var settingsTemplates = template.Must(template.ParseFS(htmlFS, "html/base.html",
 
 func handleSettingsGET(db *database.DB) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		settings := r.Context().Value(model.SettingsContextKey{}).(*model.Settings)
 		render(w, settingsTemplates, http.StatusOK, SettingsPage{
-			Page:     makePage(r, &Page{Title: "Settings", Section: "settings"}),
-			Settings: settings,
+			Page: makePage(r, &Page{Title: "Settings", Section: "settings"}),
 		})
 	})
 }
@@ -36,16 +34,16 @@ func handleSettingsPOST(db *database.DB) http.Handler {
 		settings := model.Settings{
 			LightMode: darkMode != "1",
 		}
-		account := r.Context().Value(model.AccountContextKey{}).(*model.Account)
-		err := db.SaveAccountSettings(account, &settings)
+		session := r.Context().Value(model.SessionContextKey{}).(*model.Session)
+		session.Data.Settings = &settings
+		err := db.SaveAccountSettings(session.Data.Account, &settings)
 		if err != nil {
 			errorResponse(w, r, http.StatusInternalServerError, err)
 			return
 		}
-		ctx := context.WithValue(r.Context(), model.SettingsContextKey{}, &settings)
-		page := makePage(r.WithContext(ctx), &Page{Title: "Settings", Section: "settings"})
+		ctx := context.WithValue(r.Context(), model.SessionContextKey{}, session)
 		render(w, settingsTemplates, http.StatusOK, SettingsPage{
-			Page:     page,
+			Page:     makePage(r.WithContext(ctx), &Page{Title: "Settings", Section: "settings"}),
 			Settings: &settings,
 		})
 	})

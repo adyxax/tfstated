@@ -8,7 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
     <title>TFSTATED - {{ .Page.Title }}</title>
   </head>
-  <body class="{{ if .Page.LightMode }}light-theme{{ else }}black-theme{{ end }}">
+  <body class="{{ if .Page.Session.Data.Settings.LightMode }}light-theme{{ else }}black-theme{{ end }}">
     <header>
       <h6>TFSTATED</h6>
     </header>

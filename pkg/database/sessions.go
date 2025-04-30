@@ -3,6 +3,7 @@ package database
 import (
 	"database/sql"
 	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
@@ -10,31 +11,35 @@ import (
 	"git.adyxax.org/adyxax/tfstated/pkg/helpers"
 	"git.adyxax.org/adyxax/tfstated/pkg/model"
 	"git.adyxax.org/adyxax/tfstated/pkg/scrypto"
-	"go.n16f.net/uuid"
 )
 
-func (db *DB) CreateSession(account *model.Account, settingsData []byte) (string, error) {
+func (db *DB) CreateSession(sessionData *model.SessionData) (string, *model.Session, error) {
 	sessionBytes := scrypto.RandomBytes(32)
 	sessionId := base64.RawURLEncoding.EncodeToString(sessionBytes[:])
 	sessionHash := helpers.HashSessionId(sessionBytes, db.sessionsSalt.Bytes())
-	var accountId *uuid.UUID = nil
-	var settings = []byte("{}")
-	if account != nil {
-		accountId = &account.Id
-		settings = account.Settings
-	} else if settingsData != nil {
-		settings = settingsData
+	if sessionData == nil {
+		var err error
+		sessionData, err = model.NewSessionData(nil, nil)
+		if err != nil {
+			return "", nil, fmt.Errorf("failed to generate new session data: %w", err)
+		}
+	}
+	data, err := json.Marshal(sessionData)
+	if err != nil {
+		return "", nil, fmt.Errorf("failed to marshal session data: %w", err)
 	}
 	if _, err := db.Exec(
-		`INSERT INTO sessions(id, account_id, settings)
-		   VALUES (?, ?, ?);`,
+		`INSERT INTO sessions(id, data)
+		   VALUES (?, jsonb(?));`,
 		sessionHash,
-		accountId,
-		settings,
+		data,
 	); err != nil {
-		return "", fmt.Errorf("failed insert new session in database: %w", err)
+		return "", nil, fmt.Errorf("failed insert new session in database: %w", err)
 	}
-	return sessionId, nil
+	return sessionId, &model.Session{
+		Id:   sessionHash,
+		Data: sessionData,
+	}, nil
 }
 
 func (db *DB) DeleteExpiredSessions() error {
@@ -66,38 +71,44 @@ func (db *DB) LoadSessionById(id string) (*model.Session, error) {
 	var (
 		created int64
 		updated int64
+		data    []byte
 	)
 	err = db.QueryRow(
-		`SELECT account_id,
-                created,
+		`SELECT created,
                 updated,
-                settings
+                json_extract(data, '$')
            FROM sessions
            WHERE id = ?;`,
 		sessionHash,
-	).Scan(&session.AccountId,
+	).Scan(
 		&created,
 		&updated,
-		&session.Settings,
-	)
+		&data)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
 		}
 		return nil, fmt.Errorf("failed to load session by id %s: %w", id, err)
 	}
+	if err := json.Unmarshal(data, &session.Data); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal session data: %w", err)
+	}
 	session.Created = time.Unix(created, 0)
 	session.Updated = time.Unix(updated, 0)
 	return &session, nil
 }
 
-func (db *DB) MigrateSession(session *model.Session, account *model.Account) (string, error) {
+func (db *DB) MigrateSession(session *model.Session, account *model.Account) (string, *model.Session, error) {
 	if err := db.DeleteSession(session); err != nil {
-		return "", fmt.Errorf("failed to delete session: %w", err)
+		return "", nil, fmt.Errorf("failed to delete session: %w", err)
 	}
-	sessionId, err := db.CreateSession(account, session.Settings)
+	sessionData, err := model.NewSessionData(account, session.Data.Settings)
 	if err != nil {
-		return "", fmt.Errorf("failed to create session: %w", err)
+		return "", nil, fmt.Errorf("failed to generate new session data: %w", err)
 	}
-	return sessionId, nil
+	sessionId, session, err := db.CreateSession(sessionData)
+	if err != nil {
+		return "", nil, fmt.Errorf("failed to create session: %w", err)
+	}
+	return sessionId, session, nil
 }

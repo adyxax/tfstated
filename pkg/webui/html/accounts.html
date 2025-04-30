@@ -7,7 +7,7 @@
       Use this page to inspect user accounts.
     </p>
   </div>
-  {{ if .Page.IsAdmin }}
+  {{ if .Page.Session.Data.Account.IsAdmin }}
   <form action="/accounts" enctype="multipart/form-data" method="post">
     <fieldset>
       <legend>New User Account</legend>

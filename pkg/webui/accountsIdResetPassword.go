@@ -19,37 +19,36 @@ type AccountsIdResetPasswordPage struct {
 
 var accountsIdResetPasswordTemplates = template.Must(template.ParseFS(htmlFS, "html/base.html", "html/accountsIdResetPassword.html"))
 
-func processAccountsIdResetPasswordPathValues(db *database.DB, w http.ResponseWriter, r *http.Request) (*model.Account, bool) {
+func processAccountsIdResetPasswordPathValues(db *database.DB, w http.ResponseWriter, r *http.Request) *model.Account {
 	var accountId uuid.UUID
 	if err := accountId.Parse(r.PathValue("id")); err != nil {
-		errorResponse(w, r, http.StatusBadRequest, err)
-		return nil, false
+		return nil
 	}
 	var token uuid.UUID
 	if err := token.Parse(r.PathValue("token")); err != nil {
 		errorResponse(w, r, http.StatusBadRequest, err)
-		return nil, false
+		return nil
 	}
 	account, err := db.LoadAccountById(&accountId)
 	if err != nil {
 		errorResponse(w, r, http.StatusInternalServerError, err)
-		return nil, false
+		return nil
 	}
 	if account == nil || account.PasswordReset == nil {
 		errorResponse(w, r, http.StatusBadRequest, err)
-		return nil, false
+		return nil
 	}
 	if !account.PasswordReset.Equal(token) {
 		errorResponse(w, r, http.StatusBadRequest, err)
-		return nil, false
+		return nil
 	}
-	return account, true
+	return account
 }
 
 func handleAccountsIdResetPasswordGET(db *database.DB) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		account, valid := processAccountsIdResetPasswordPathValues(db, w, r)
-		if !valid {
+		account := processAccountsIdResetPasswordPathValues(db, w, r)
+		if account == nil {
 			return
 		}
 		render(w, accountsIdResetPasswordTemplates, http.StatusOK,
@@ -63,8 +62,8 @@ func handleAccountsIdResetPasswordGET(db *database.DB) http.Handler {
 
 func handleAccountsIdResetPasswordPOST(db *database.DB) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		account, valid := processAccountsIdResetPasswordPathValues(db, w, r)
-		if !valid {
+		account := processAccountsIdResetPasswordPathValues(db, w, r)
+		if account == nil {
 			return
 		}
 		password := r.FormValue("password")

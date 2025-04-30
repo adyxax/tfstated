@@ -13,15 +13,15 @@ CREATE TABLE accounts (
   settings BLOB NOT NULL,
   password_reset TEXT
 ) STRICT;
-CREATE UNIQUE INDEX accounts_username on accounts(username);
+CREATE UNIQUE INDEX accounts_username ON accounts(username);
 
 CREATE TABLE sessions (
   id BLOB PRIMARY KEY,
-  account_id TEXT,
   created INTEGER NOT NULL DEFAULT (unixepoch()),
   updated INTEGER NOT NULL DEFAULT (unixepoch()),
-  settings BLOB NOT NULL
+  data BLOB NOT NULL
 ) STRICT;
+CREATE INDEX sessions_data_account_id ON sessions(data->'account'->>'id');
 
 CREATE TABLE states (
   id TEXT PRIMARY KEY,
@@ -30,7 +30,7 @@ CREATE TABLE states (
   created INTEGER DEFAULT (unixepoch()),
   updated INTEGER DEFAULT (unixepoch())
 ) STRICT;
-CREATE UNIQUE INDEX states_path on states(path);
+CREATE UNIQUE INDEX states_path ON states(path);
 
 CREATE TABLE versions (
   id TEXT PRIMARY KEY,

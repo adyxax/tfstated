@@ -26,8 +26,8 @@ func handleLoginGET() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Cache-Control", "no-store, no-cache")
 
-		account := r.Context().Value(model.AccountContextKey{})
-		if account != nil {
+		session := r.Context().Value(model.SessionContextKey{}).(*model.Session)
+		if session.Data.Account != nil {
 			http.Redirect(w, r, "/states", http.StatusFound)
 			return
 		}
@@ -56,7 +56,7 @@ func handleLoginPOST(db *database.DB) http.Handler {
 		password := r.FormValue("password")
 
 		if username == "" || password == "" {
-			errorResponse(w, r, http.StatusBadRequest, nil)
+			errorResponse(w, r, http.StatusBadRequest, fmt.Errorf("Invalid username or password"))
 			return
 		}
 		if ok := validUsername.MatchString(username); !ok {
@@ -79,41 +79,31 @@ func handleLoginPOST(db *database.DB) http.Handler {
 			return
 		}
 		session := r.Context().Value(model.SessionContextKey{}).(*model.Session)
-		sessionId, err := db.MigrateSession(session, account)
+		sessionId, session, err := db.MigrateSession(session, account)
 		if err != nil {
 			errorResponse(w, r, http.StatusInternalServerError,
 				fmt.Errorf("failed to migrate session: %w", err))
 			return
 		}
 		setSessionCookie(w, sessionId)
+		ctx := context.WithValue(r.Context(), model.SessionContextKey{}, session)
 		if err := db.DeleteExpiredSessions(); err != nil {
 			slog.Error("failed to delete expired sessions after user login", "err", err, "accountId", account.Id)
 		}
-		http.Redirect(w, r, "/", http.StatusFound)
+		http.Redirect(w, r.WithContext(ctx), "/", http.StatusFound)
 	})
 }
 
-func loginMiddleware(db *database.DB, requireSession func(http.Handler) http.Handler) func(http.Handler) http.Handler {
+func loginMiddleware(requireSession func(http.Handler) http.Handler) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return requireSession(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Cache-Control", "no-store, no-cache")
 			session := r.Context().Value(model.SessionContextKey{}).(*model.Session)
-			if session.AccountId == nil {
+			if session.Data.Account == nil {
 				http.Redirect(w, r, "/login", http.StatusFound)
 				return
 			}
-			account, err := db.LoadAccountById(session.AccountId)
-			if err != nil {
-				errorResponse(w, r, http.StatusInternalServerError,
-					fmt.Errorf("failed to load account by Id: %w", err))
-				return
-			}
-			if account == nil {
-				http.Redirect(w, r, "/login", http.StatusFound)
-				return
-			}
-			ctx := context.WithValue(r.Context(), model.AccountContextKey{}, account)
-			next.ServeHTTP(w, r.WithContext(ctx))
+			next.ServeHTTP(w, r)
 		}))
 	}
 }

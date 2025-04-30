@@ -1,6 +1,7 @@
 package webui
 
 import (
+	"fmt"
 	"html/template"
 	"net/http"
 
@@ -35,7 +36,7 @@ func handleAccountsIdGET(db *database.DB) http.Handler {
 			return
 		}
 		if account == nil {
-			errorResponse(w, r, http.StatusNotFound, err)
+			errorResponse(w, r, http.StatusNotFound, fmt.Errorf("The account Id could not be found."))
 			return
 		}
 		statePaths, err := db.LoadStatePaths()

@@ -2,7 +2,6 @@ package model
 
 import (
 	"crypto/subtle"
-	"encoding/json"
 	"time"
 
 	"git.adyxax.org/adyxax/tfstated/pkg/helpers"
@@ -12,15 +11,15 @@ import (
 type AccountContextKey struct{}
 
 type Account struct {
-	Id            uuid.UUID
-	Username      string
-	Salt          []byte
-	PasswordHash  []byte
-	IsAdmin       bool
-	Created       time.Time
-	LastLogin     time.Time
-	Settings      json.RawMessage
-	PasswordReset *uuid.UUID
+	Id            uuid.UUID  `json:"id"`
+	Username      string     `json:"username"`
+	Salt          []byte     `json:"salt"`
+	PasswordHash  []byte     `json:"password_hash"`
+	IsAdmin       bool       `json:"is_admin"`
+	Created       time.Time  `json:"created"`
+	LastLogin     time.Time  `json:"last_login"`
+	Settings      *Settings  `json:"settings"`
+	PasswordReset *uuid.UUID `json:"password_reset"`
 }
 
 func (account *Account) CheckPassword(password string) bool {
