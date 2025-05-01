@@ -413,12 +413,13 @@ th {
     color: var(--fg-0);
     left: 50%;
     margin-left: -60px;
+    min-width: 320px;
     padding: 5px 0;
     position: absolute;
     text-align: center;
     top: 100%;
     visibility: hidden;
-    width: 120px;
+    width: fit-content;
     z-index: 1;
 }
 .tooltip .tooltip-text::after {

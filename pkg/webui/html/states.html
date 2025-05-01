@@ -70,9 +70,15 @@
           unlocked
           {{ else }}
           <span class="tooltip">
-            locked
+            <strong>locked</strong>
             <span class="tooltip-text">
-              {{ .State.Lock }}
+              <strong>Created: </strong>{{ .Lock.Created }}<br>
+              <strong>Id: </strong>{{ .Lock.Id }}<br>
+              <strong>Info: </strong>{{ .Lock.Info }}<br>
+              <strong>Operation: </strong>{{ .Lock.Operation }}<br>
+              <strong>Path: </strong>{{ .Lock.Path }}<br>
+              <strong>Version: </strong>{{ .Lock.Version }}<br>
+              <strong>Who: </strong>{{ .Lock.Who }}
             </span>
           </span>
           {{ end }}

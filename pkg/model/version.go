@@ -12,6 +12,6 @@ type Version struct {
 	Created   time.Time
 	Data      json.RawMessage
 	Id        uuid.UUID
-	Lock      *string
+	Lock      *Lock
 	StateId   uuid.UUID
 }

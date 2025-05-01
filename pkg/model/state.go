@@ -9,7 +9,7 @@ import (
 type State struct {
 	Created time.Time
 	Id      uuid.UUID
-	Lock    *string
+	Lock    *Lock
 	Path    string
 	Updated time.Time
 }

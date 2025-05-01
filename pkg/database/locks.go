@@ -16,44 +16,71 @@ func (db *DB) SetLockOrGetExistingLock(path string, lock any) (bool, error) {
 	ret := false
 	return ret, db.WithTransaction(func(tx *sql.Tx) error {
 		var lockData []byte
-		if err := tx.QueryRowContext(db.ctx, `SELECT lock FROM states WHERE path = ?;`, path).Scan(&lockData); err != nil {
+		err := tx.QueryRowContext(db.ctx,
+			`SELECT json_extract(lock, '$')
+               FROM states
+               WHERE path = ?;`,
+			path).Scan(&lockData)
+		if err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
 				if lockData, err = json.Marshal(lock); err != nil {
-					return err
+					return fmt.Errorf("failed to marshall lock data: %w", err)
 				}
 				var stateId uuid.UUID
 				if err := stateId.Generate(uuid.V7); err != nil {
 					return fmt.Errorf("failed to generate state id: %w", err)
 				}
-				_, err = tx.ExecContext(db.ctx, `INSERT INTO states(id, path, lock) VALUES (?, ?, json(?))`, stateId, path, lockData)
+				_, err := tx.ExecContext(db.ctx,
+					`INSERT INTO states(id, path, lock)
+                       VALUES (?, ?, jsonb(?))`,
+					stateId, path, lockData)
+				if err != nil {
+					return fmt.Errorf("failed to create new state: %w", err)
+				}
 				ret = true
-				return err
-			} else {
-				return err
+				return nil
 			}
+			return fmt.Errorf("failed to select lock data from state: %w", err)
 		}
 		if lockData != nil {
-			return json.Unmarshal(lockData, lock)
+			if err := json.Unmarshal(lockData, lock); err != nil {
+				return fmt.Errorf("failed to unmarshal lock data: %w", err)
+			}
+			return nil
 		}
-		var err error
 		if lockData, err = json.Marshal(lock); err != nil {
-			return err
+			return fmt.Errorf("failed to marshal lock data: %w", err)
 		}
-		_, err = tx.ExecContext(db.ctx, `UPDATE states SET lock = json(?) WHERE path = ?;`, lockData, path)
+		_, err = tx.ExecContext(db.ctx,
+			`UPDATE states
+               SET lock = jsonb(?)
+               WHERE path = ?;`,
+			lockData, path)
+		if err != nil {
+			return fmt.Errorf("failed to set lock data: %w", err)
+		}
 		ret = true
-		return err
+		return nil
 	})
 }
 
-func (db *DB) Unlock(path, lock any) (bool, error) {
+func (db *DB) Unlock(path string, lock any) (bool, error) {
 	data, err := json.Marshal(lock)
 	if err != nil {
-		return false, err
+		return false, fmt.Errorf("failed to marshal lock data: %w", err)
 	}
-	result, err := db.Exec(`UPDATE states SET lock = NULL WHERE path = ? and lock = json(?);`, path, data)
+	result, err := db.Exec(
+		`UPDATE states
+           SET lock = NULL
+           WHERE path = ? and lock = jsonb(?);`,
+		path, data)
 	if err != nil {
-		return false, err
+		return false, fmt.Errorf("failed to update state: %w", err)
 	}
 	n, err := result.RowsAffected()
-	return n == 1, err
+	if err != nil {
+		return false, fmt.Errorf("failed to get affected rows: %w", err)
+	}
+	return n == 1, nil
+}
 }

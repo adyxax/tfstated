@@ -26,7 +26,7 @@ CREATE INDEX sessions_data_account_id ON sessions(data->'account'->>'id');
 CREATE TABLE states (
   id TEXT PRIMARY KEY,
   path TEXT NOT NULL,
-  lock TEXT,
+  lock BLOB,
   created INTEGER DEFAULT (unixepoch()),
   updated INTEGER DEFAULT (unixepoch())
 ) STRICT;
@@ -37,7 +37,7 @@ CREATE TABLE versions (
   account_id TEXT NOT NULL,
   state_id TEXT,
   data BLOB,
-  lock TEXT,
+  lock BLOB,
   created INTEGER DEFAULT (unixepoch()),
   FOREIGN KEY(account_id) REFERENCES accounts(id) ON DELETE CASCADE
   FOREIGN KEY(state_id) REFERENCES states(id) ON DELETE CASCADE

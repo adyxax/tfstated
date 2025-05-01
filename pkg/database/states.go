@@ -2,9 +2,9 @@ package database
 
 import (
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
-	"slices"
 	"time"
 
 	"git.adyxax.org/adyxax/tfstated/pkg/model"
@@ -98,15 +98,23 @@ func (db *DB) LoadStateById(stateId uuid.UUID) (*model.State, error) {
 	var (
 		created int64
 		updated int64
+		lock    []byte
 	)
 	err := db.QueryRow(
-		`SELECT created, lock, path, updated FROM states WHERE id = ?;`,
-		stateId).Scan(&created, &state.Lock, &state.Path, &updated)
+		`SELECT created, json_extract(lock, '$'), path, updated
+           FROM states
+           WHERE id = ?;`,
+		stateId).Scan(&created, &lock, &state.Path, &updated)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
 		}
 		return nil, fmt.Errorf("failed to load state id %s from database: %w", stateId, err)
+	}
+	if lock != nil {
+		if err := json.Unmarshal(lock, &state.Lock); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal lock data: %w", err)
+		}
 	}
 	state.Created = time.Unix(created, 0)
 	state.Updated = time.Unix(updated, 0)
@@ -140,7 +148,7 @@ func (db *DB) LoadStatePaths() (map[string]string, error) {
 
 func (db *DB) LoadStates() ([]model.State, error) {
 	rows, err := db.Query(
-		`SELECT created, id, lock, path, updated FROM states;`)
+		`SELECT created, id, json_extract(lock, '$'), path, updated FROM states;`)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load states from database: %w", err)
 	}
@@ -151,10 +159,16 @@ func (db *DB) LoadStates() ([]model.State, error) {
 			state   model.State
 			created int64
 			updated int64
+			lock    []byte
 		)
-		err = rows.Scan(&created, &state.Id, &state.Lock, &state.Path, &updated)
+		err = rows.Scan(&created, &state.Id, &lock, &state.Path, &updated)
 		if err != nil {
 			return nil, fmt.Errorf("failed to load state from row: %w", err)
+		}
+		if lock != nil {
+			if err := json.Unmarshal(lock, &state.Lock); err != nil {
+				return nil, fmt.Errorf("failed to unmarshal lock data: %w", err)
+			}
 		}
 		state.Created = time.Unix(created, 0)
 		state.Updated = time.Unix(updated, 0)
@@ -168,12 +182,16 @@ func (db *DB) LoadStates() ([]model.State, error) {
 
 // Returns (true, nil) on successful save
 func (db *DB) SaveState(state *model.State) (bool, error) {
-	_, err := db.Exec(
+	lock, err := json.Marshal(state.Lock)
+	if err != nil {
+		return false, fmt.Errorf("failed to marshal lock data: %w", err)
+	}
+	_, err = db.Exec(
 		`UPDATE states
-           SET lock = ?,
+           SET lock = jsonb(?),
                path = ?
            WHERE id = ?`,
-		state.Lock,
+		lock,
 		state.Path,
 		state.Id)
 	if err != nil {
@@ -189,7 +207,7 @@ func (db *DB) SaveState(state *model.State) (bool, error) {
 }
 
 // returns true in case of lock mismatch
-func (db *DB) SetState(path string, accountId uuid.UUID, data []byte, lock string) (bool, error) {
+func (db *DB) SetState(path string, accountId uuid.UUID, data []byte, lockId string) (bool, error) {
 	encryptedData, err := db.dataEncryptionKey.EncryptAES256(data)
 	if err != nil {
 		return false, fmt.Errorf("failed to encrypt state data: %w", err)
@@ -198,28 +216,27 @@ func (db *DB) SetState(path string, accountId uuid.UUID, data []byte, lock strin
 	return ret, db.WithTransaction(func(tx *sql.Tx) error {
 		var (
 			stateId  string
-			lockData []byte
+			lockData *string
 		)
-		if err = tx.QueryRowContext(db.ctx, `SELECT id, lock->>'ID' FROM states WHERE path = ?;`, path).Scan(&stateId, &lockData); err != nil {
+		if err := tx.QueryRowContext(db.ctx, `SELECT id, lock->>'ID' FROM states WHERE path = ?;`, path).Scan(&stateId, &lockData); err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
 				var stateUUID uuid.UUID
 				if err := stateUUID.Generate(uuid.V7); err != nil {
 					return fmt.Errorf("failed to generate state id: %w", err)
 				}
-				_, err = tx.ExecContext(db.ctx, `INSERT INTO states(id, path) VALUES (?, ?)`, stateUUID, path)
+				_, err := tx.ExecContext(db.ctx, `INSERT INTO states(id, path) VALUES (?, ?)`, stateUUID, path)
 				if err != nil {
 					return fmt.Errorf("failed to insert new state: %w", err)
 				}
 				stateId = stateUUID.String()
 			} else {
-				return err
+				return fmt.Errorf("failed to select lock data from state: %w", err)
 			}
 		}
 
-		if lock != "" && slices.Compare([]byte(lock), lockData) != 0 {
-			err = fmt.Errorf("failed to update state: lock ID mismatch")
+		if lockId != "" && (lockData == nil || lockId != *lockData) {
 			ret = true
-			return err
+			return fmt.Errorf("failed to update state: lock ID mismatch")
 		}
 		var versionId uuid.UUID
 		if err := versionId.Generate(uuid.V7); err != nil {
@@ -227,9 +244,9 @@ func (db *DB) SetState(path string, accountId uuid.UUID, data []byte, lock strin
 		}
 		_, err = tx.ExecContext(db.ctx,
 			`INSERT INTO versions(id, account_id, state_id, data, lock)
-           SELECT :versionId, :accountId, :stateId, :data, lock
-             FROM states
-             WHERE states.id = :stateId;`,
+               SELECT :versionId, :accountId, :stateId, :data, lock
+                 FROM states
+                 WHERE states.id = :stateId;`,
 			sql.Named("accountId", accountId),
 			sql.Named("data", encryptedData),
 			sql.Named("stateId", stateId),
