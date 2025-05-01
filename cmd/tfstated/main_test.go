@@ -36,6 +36,8 @@ func TestMain(m *testing.M) {
 			return "a528D1m9q3IZxLinSmHmeKxrx3Pmm7GQ3nBzIDxjr0A="
 		case "TFSTATED_VERSIONS_HISTORY_LIMIT":
 			return "3"
+		case "TFSTATED_VERSIONS_HISTORY_MINIMUM_DAYS":
+			return "0"
 		default:
 			return ""
 		}

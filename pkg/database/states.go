@@ -244,19 +244,21 @@ func (db *DB) SetState(path string, accountId uuid.UUID, data []byte, lock strin
 		if err != nil {
 			return fmt.Errorf("failed to touch updated for state: %w", err)
 		}
+		min := time.Now().Add(time.Duration(db.versionsHistoryMinimumDays) * -24 * time.Hour)
 		_, err = tx.ExecContext(db.ctx,
 			`DELETE FROM versions
-           WHERE state_id = (SELECT id
-                               FROM states
-                               WHERE path = :path)
-             AND id < (SELECT MIN(id)
-                         FROM(SELECT versions.id
-                                FROM versions
-                                JOIN states ON states.id = versions.state_id
-                                WHERE states.path = :path
-                                ORDER BY versions.id DESC
-                                LIMIT :limit));`,
+               WHERE state_id = (SELECT id
+                                   FROM states
+                                   WHERE path = :path)
+               AND id < (SELECT MIN(id)
+                           FROM(SELECT versions.id
+                                  FROM versions
+                                  JOIN states ON states.id = versions.state_id
+                                  WHERE states.path = :path AND versions.created < :min
+                                  ORDER BY versions.id DESC
+                                  LIMIT :limit));`,
 			sql.Named("limit", db.versionsHistoryLimit),
+			sql.Named("min", min),
 			sql.Named("path", path),
 		)
 		return err

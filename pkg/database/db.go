@@ -28,12 +28,13 @@ func initDB(ctx context.Context, url string) (*sql.DB, error) {
 }
 
 type DB struct {
-	ctx                  context.Context
-	dataEncryptionKey    scrypto.AES256Key
-	readDB               *sql.DB
-	sessionsSalt         scrypto.AES256Key
-	versionsHistoryLimit int
-	writeDB              *sql.DB
+	ctx                        context.Context
+	dataEncryptionKey          scrypto.AES256Key
+	readDB                     *sql.DB
+	sessionsSalt               scrypto.AES256Key
+	versionsHistoryLimit       int
+	versionsHistoryMinimumDays int
+	writeDB                    *sql.DB
 }
 
 func NewDB(ctx context.Context, url string, getenv func(string) string) (*DB, error) {
@@ -60,10 +61,11 @@ func NewDB(ctx context.Context, url string, getenv func(string) string) (*DB, er
 	writeDB.SetMaxOpenConns(1)
 
 	db := DB{
-		ctx:                  ctx,
-		readDB:               readDB,
-		versionsHistoryLimit: 64,
-		writeDB:              writeDB,
+		ctx:                        ctx,
+		readDB:                     readDB,
+		versionsHistoryLimit:       128,
+		versionsHistoryMinimumDays: 28,
+		writeDB:                    writeDB,
 	}
 	pragmas := []struct {
 		key   string
@@ -101,6 +103,12 @@ func NewDB(ctx context.Context, url string, getenv func(string) string) (*DB, er
 	if versionsHistoryLimit != "" {
 		if db.versionsHistoryLimit, err = strconv.Atoi(versionsHistoryLimit); err != nil {
 			return nil, fmt.Errorf("failed to parse the TFSTATED_VERSIONS_HISTORY_LIMIT environment variable, expected an integer: %w", err)
+		}
+	}
+	versionsHistoryMinimumDays := getenv("TFSTATED_VERSIONS_HISTORY_MINIMUM_DAYS")
+	if versionsHistoryMinimumDays != "" {
+		if db.versionsHistoryMinimumDays, err = strconv.Atoi(versionsHistoryMinimumDays); err != nil {
+			return nil, fmt.Errorf("failed to parse the TFSTATED_VERSIONS_HISTORY_MINIMUM_DAYS environment variable, expected an integer: %w", err)
 		}
 	}
 
