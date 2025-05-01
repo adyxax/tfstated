@@ -66,7 +66,6 @@ func handleStatesIdPOST(db *database.DB) http.Handler {
 		if !verifyCSRFToken(w, r) {
 			return
 		}
-		action := r.FormValue("action")
 		var stateId uuid.UUID
 		if err := stateId.Parse(r.PathValue("id")); err != nil {
 			errorResponse(w, r, http.StatusBadRequest, err)
@@ -87,6 +86,7 @@ func handleStatesIdPOST(db *database.DB) http.Handler {
 			errorResponse(w, r, http.StatusInternalServerError, err)
 			return
 		}
+		action := r.FormValue("action")
 		switch action {
 		case "delete":
 			errorResponse(w, r, http.StatusNotImplemented, err)
@@ -121,17 +121,24 @@ func handleStatesIdPOST(db *database.DB) http.Handler {
 				})
 				return
 			}
-			render(w, statesIdTemplate, http.StatusOK, StatesIdPage{
-				Page: makePage(r, &Page{
-					Section: "states",
-					Title:   state.Path,
-				}),
-				State:     state,
-				Usernames: usernames,
-				Versions:  versions,
-			})
+		case "unlock":
+			if err := db.ForceUnlock(state); err != nil {
+				errorResponse(w, r, http.StatusInternalServerError, err)
+				return
+			}
+			state.Lock = nil
 		default:
 			errorResponse(w, r, http.StatusBadRequest, err)
+			return
 		}
+		render(w, statesIdTemplate, http.StatusOK, StatesIdPage{
+			Page: makePage(r, &Page{
+				Section: "states",
+				Title:   state.Path,
+			}),
+			State:     state,
+			Usernames: usernames,
+			Versions:  versions,
+		})
 	})
 }

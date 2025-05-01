@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 
+	"git.adyxax.org/adyxax/tfstated/pkg/model"
 	"go.n16f.net/uuid"
 )
 
@@ -83,4 +84,15 @@ func (db *DB) Unlock(path string, lock any) (bool, error) {
 	}
 	return n == 1, nil
 }
+
+func (db *DB) ForceUnlock(state *model.State) error {
+	_, err := db.Exec(
+		`UPDATE states
+           SET lock = NULL
+           WHERE id = ?;`,
+		state.Id)
+	if err != nil {
+		return fmt.Errorf("failed to update state: %w", err)
+	}
+	return nil
 }

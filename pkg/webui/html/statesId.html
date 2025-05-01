@@ -70,7 +70,8 @@
     <input name="csrf_token" type="hidden" value="{{ .Page.Session.Data.CsrfToken }}">
     <fieldset>
       <legend>Danger Zone</legend>
-      <button action="delete" type="submit" value="delete">Delete State</button>
+      <button name="action" type="submit" value="delete">Delete State</button>
+      <button {{ if eq .State.Lock nil }}disabled{{ end }} name="action" type="submit" value="unlock">Unlock State</button>
     </fieldset>
   </form>
 </div>
