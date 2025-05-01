@@ -24,6 +24,7 @@
 <h2>Operations</h2>
 <div class="flex-row">
   <form action="/states/{{ .State.Id }}" method="post">
+    <input name="csrf_token" type="hidden" value="{{ .Page.Session.Data.CsrfToken }}">
     <fieldset>
       <legend>Edit State</legend>
       <div class="flex-row">
@@ -60,6 +61,7 @@
     </fieldset>
   </form>
   <form action="/states/{{ .State.Id }}" method="post">
+    <input name="csrf_token" type="hidden" value="{{ .Page.Session.Data.CsrfToken }}">
     <fieldset>
       <legend>Danger Zone</legend>
       <button action="delete" type="submit" value="delete">Delete State</button>

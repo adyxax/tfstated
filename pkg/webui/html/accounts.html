@@ -9,6 +9,7 @@
   </div>
   {{ if .Page.Session.Data.Account.IsAdmin }}
   <form action="/accounts" enctype="multipart/form-data" method="post">
+    <input name="csrf_token" type="hidden" value="{{ .Page.Session.Data.CsrfToken }}">
     <fieldset>
       <legend>New User Account</legend>
       <div class="grid-2">
@@ -40,6 +41,7 @@
       {{ end }}
       <div style="align-self:stretch; display:flex; justify-content:flex-end;">
         <button class="primary" type="submit" value="submit">Create User Account</button>
+      </div>
     </fieldset>
   </form>
   {{ end }}

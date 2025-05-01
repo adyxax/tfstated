@@ -1,6 +1,7 @@
 {{ define "main" }}
 <div style="display: grid;">
   <form action="/login" method="post" style="align-self:center; justify-self: center;">
+    <input name="csrf_token" type="hidden" value="{{ .Page.Session.Data.CsrfToken }}">
     <fieldset style="align-items:center; display:flex; flex-direction:column; gap:8px;">
       <legend>Login</legend>
       <div style="align-items:center; display:flex; flex-direction:row; gap:8px;">

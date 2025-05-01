@@ -44,6 +44,9 @@ func handleStatesPOST(db *database.DB) http.Handler {
 			errorResponse(w, r, http.StatusBadRequest, err)
 			return
 		}
+		if !verifyCSRFToken(w, r) {
+			return
+		}
 		file, _, err := r.FormFile("file")
 		if err != nil {
 			errorResponse(w, r, http.StatusBadRequest, err)

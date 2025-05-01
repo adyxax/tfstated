@@ -1,6 +1,7 @@
 package webui
 
 import (
+	"fmt"
 	"html/template"
 	"net/http"
 	"path"
@@ -36,6 +37,14 @@ func handleAccountsGET(db *database.DB) http.Handler {
 
 func handleAccountsPOST(db *database.DB) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if err := r.ParseForm(); err != nil {
+			errorResponse(w, r, http.StatusBadRequest,
+				fmt.Errorf("failed to parse form: %w", err))
+			return
+		}
+		if !verifyCSRFToken(w, r) {
+			return
+		}
 		accounts, err := db.LoadAccounts()
 		if err != nil {
 			errorResponse(w, r, http.StatusInternalServerError, err)

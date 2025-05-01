@@ -63,6 +63,9 @@ func handleStatesIdPOST(db *database.DB) http.Handler {
 			errorResponse(w, r, http.StatusBadRequest, err)
 			return
 		}
+		if !verifyCSRFToken(w, r) {
+			return
+		}
 		action := r.FormValue("action")
 		var stateId uuid.UUID
 		if err := stateId.Parse(r.PathValue("id")); err != nil {

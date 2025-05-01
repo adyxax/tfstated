@@ -27,6 +27,7 @@
 {{ if .Page.Session.Data.Account.IsAdmin }}
 <h2>Operations</h2>
 <form action="/accounts/{{ .Account.Id }}" enctype="multipart/form-data" method="post">
+  <input name="csrf_token" type="hidden" value="{{ .Page.Session.Data.CsrfToken }}">
   <div class="flex-row">
     <fieldset>
       <legend>Edit User Account</legend>

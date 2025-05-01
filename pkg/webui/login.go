@@ -52,6 +52,9 @@ func handleLoginPOST(db *database.DB) http.Handler {
 				fmt.Errorf("failed to parse form: %w", err))
 			return
 		}
+		if !verifyCSRFToken(w, r) {
+			return
+		}
 		username := r.FormValue("username")
 		password := r.FormValue("password")
 

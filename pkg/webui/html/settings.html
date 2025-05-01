@@ -1,6 +1,7 @@
 {{ define "main" }}
 <h1>Settings</h1>
 <form action="/settings" method="post">
+  <input name="csrf_token" type="hidden" value="{{ .Page.Session.Data.CsrfToken }}">
   <fieldset>
     <legend>Account Settings</legend>
     <div style="align-items:center; display:grid; grid-template-columns:1fr 1fr;">

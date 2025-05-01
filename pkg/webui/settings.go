@@ -16,7 +16,7 @@ type SettingsPage struct {
 
 var settingsTemplates = template.Must(template.ParseFS(htmlFS, "html/base.html", "html/settings.html"))
 
-func handleSettingsGET(db *database.DB) http.Handler {
+func handleSettingsGET() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		render(w, settingsTemplates, http.StatusOK, SettingsPage{
 			Page: makePage(r, &Page{Title: "Settings", Section: "settings"}),
@@ -28,6 +28,9 @@ func handleSettingsPOST(db *database.DB) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if err := r.ParseForm(); err != nil {
 			errorResponse(w, r, http.StatusBadRequest, err)
+			return
+		}
+		if !verifyCSRFToken(w, r) {
 			return
 		}
 		darkMode := r.FormValue("dark-mode")

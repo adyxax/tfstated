@@ -1,6 +1,7 @@
 package webui
 
 import (
+	"fmt"
 	"html/template"
 	"net/http"
 
@@ -64,6 +65,14 @@ func handleAccountsIdResetPasswordPOST(db *database.DB) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		account := processAccountsIdResetPasswordPathValues(db, w, r)
 		if account == nil {
+			return
+		}
+		if err := r.ParseForm(); err != nil {
+			errorResponse(w, r, http.StatusBadRequest,
+				fmt.Errorf("failed to parse form: %w", err))
+			return
+		}
+		if !verifyCSRFToken(w, r) {
 			return
 		}
 		password := r.FormValue("password")

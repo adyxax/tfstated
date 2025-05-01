@@ -7,6 +7,7 @@
     <p>You also have the option to upload a JSON state file in order to create a new state in TfStated. This is equivalent to using the <code>state push</code> command of OpenTofu/Terraform on a brand new state.</p>
   </div>
   <form action="/states" enctype="multipart/form-data" method="post">
+    <input name="csrf_token" type="hidden" value="{{ .Page.Session.Data.CsrfToken }}">
     <fieldset>
       <legend>New State</legend>
       <div class="grid-2">
