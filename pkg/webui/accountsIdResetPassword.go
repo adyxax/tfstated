@@ -82,7 +82,8 @@ func handleAccountsIdResetPasswordPOST(db *database.DB) http.Handler {
 		}
 		account.SetPassword(password)
 		if err := db.SaveAccount(account); err != nil {
-			errorResponse(w, r, http.StatusInternalServerError, err)
+			errorResponse(w, r, http.StatusInternalServerError,
+				fmt.Errorf("failed to save account: %w", err))
 			return
 		}
 		render(w, accountsIdResetPasswordTemplates, http.StatusOK,

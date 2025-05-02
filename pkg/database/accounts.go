@@ -28,8 +28,9 @@ func (db *DB) CreateAccount(username string, isAdmin bool) (*model.Account, erro
 	if err := passwordReset.Generate(uuid.V4); err != nil {
 		return nil, fmt.Errorf("failed to generate password reset uuid: %w", err)
 	}
-	_, err := db.Exec(`INSERT INTO accounts(id, username, is_Admin, settings, password_reset)
-                              VALUES (?, ?, ?, jsonb(?), ?);`,
+	_, err := db.Exec(
+		`INSERT INTO accounts(id, username, is_Admin, settings, password_reset)
+           VALUES (?, ?, ?, jsonb(?), ?);`,
 		accountId,
 		username,
 		isAdmin,

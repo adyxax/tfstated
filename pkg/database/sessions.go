@@ -54,7 +54,17 @@ func (db *DB) DeleteExpiredSessions() error {
 func (db *DB) DeleteSession(session *model.Session) error {
 	_, err := db.Exec(`DELETE FROM sessions WHERE id = ?`, session.Id)
 	if err != nil {
-		return fmt.Errorf("failed to delete session %s: %w", session.Id, err)
+		return fmt.Errorf("failed to delete session: %w", err)
+	}
+	return nil
+}
+
+func (db *DB) DeleteSessions(account *model.Account) error {
+	_, err := db.Exec(
+		`DELETE FROM sessions WHERE data->'account'->>'id' = ?`,
+		account.Id)
+	if err != nil {
+		return fmt.Errorf("failed to delete sessions: %w", err)
 	}
 	return nil
 }

@@ -26,9 +26,9 @@
 {{ end }}
 {{ if .Page.Session.Data.Account.IsAdmin }}
 <h2>Operations</h2>
-<form action="/accounts/{{ .Account.Id }}" enctype="multipart/form-data" method="post">
-  <input name="csrf_token" type="hidden" value="{{ .Page.Session.Data.CsrfToken }}">
-  <div class="flex-row">
+<div class="flex-row">
+  <form action="/accounts/{{ .Account.Id }}" method="post">
+    <input name="csrf_token" type="hidden" value="{{ .Page.Session.Data.CsrfToken }}">
     <fieldset>
       <legend>Edit User Account</legend>
       <div class="grid-2">
@@ -59,25 +59,30 @@
       </span>
       {{ end }}
       <div style="align-self:stretch; display:flex; justify-content:flex-end;">
-        <button type="submit" value="edit">Edit User Account</button>
+        <button name="action" type="submit" value="edit">Edit User Account</button>
       </div>
     </fieldset>
+  </form>
+  <form action="/accounts/{{ .Account.Id }}" method="post">
+    <input name="csrf_token" type="hidden" value="{{ .Page.Session.Data.CsrfToken }}">
     <fieldset>
       <legend>Danger Zone</legend>
       <button {{ if eq .Page.Session.Data.Account.Id.String .Account.Id.String }}disabled{{ end }}
+              name="action"
               type="submit"
               value="delete">
         Delete User Account
       </button>
       <!--<button type="submit" value="lock">Lock User Account</button>-->
       <button {{ if or (ne .Account.PasswordReset nil) (eq .Page.Session.Data.Account.Id.String .Account.Id.String) }}disabled{{ end }}
+              name="action"
               type="submit"
               value="reset-password">
         Reset Password
       </button>
     </fieldset>
-  </div>
-</form>
+  </form>
+</div>
 {{ end }}
 <h2>Activity</h2>
 {{ if gt (len .Versions) 0 }}

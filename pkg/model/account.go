@@ -2,6 +2,7 @@ package model
 
 import (
 	"crypto/subtle"
+	"fmt"
 	"time"
 
 	"git.adyxax.org/adyxax/tfstated/pkg/helpers"
@@ -25,6 +26,17 @@ type Account struct {
 func (account *Account) CheckPassword(password string) bool {
 	hash := helpers.HashPassword(password, account.Salt)
 	return subtle.ConstantTimeCompare(hash, account.PasswordHash) == 1
+}
+
+func (account *Account) ResetPassword() error {
+	var passwordReset uuid.UUID
+	if err := passwordReset.Generate(uuid.V4); err != nil {
+		return fmt.Errorf("failed to generate password reset uuid: %w", err)
+	}
+	account.Salt = nil
+	account.PasswordHash = nil
+	account.PasswordReset = &passwordReset
+	return nil
 }
 
 func (account *Account) SetPassword(password string) {

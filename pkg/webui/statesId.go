@@ -89,7 +89,8 @@ func handleStatesIdPOST(db *database.DB) http.Handler {
 		action := r.FormValue("action")
 		switch action {
 		case "delete":
-			errorResponse(w, r, http.StatusNotImplemented, err)
+			errorResponse(w, r, http.StatusNotImplemented, nil)
+			return
 		case "edit":
 			statePath := r.FormValue("path")
 			parsedStatePath, err := url.Parse(statePath)
@@ -128,7 +129,7 @@ func handleStatesIdPOST(db *database.DB) http.Handler {
 			}
 			state.Lock = nil
 		default:
-			errorResponse(w, r, http.StatusBadRequest, err)
+			errorResponse(w, r, http.StatusBadRequest, nil)
 			return
 		}
 		render(w, statesIdTemplate, http.StatusOK, StatesIdPage{
