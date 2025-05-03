@@ -8,7 +8,7 @@
     </p>
   </div>
   {{ if .Page.Session.Data.Account.IsAdmin }}
-  <form action="/accounts" enctype="multipart/form-data" method="post">
+  <form action="/accounts" method="post">
     <input name="csrf_token" type="hidden" value="{{ .Page.Session.Data.CsrfToken }}">
     <fieldset>
       <legend>New User Account</legend>
@@ -21,11 +21,11 @@
                type="text"
                value="{{ .Username }}">
         <label for="is-admin">Is Admin</label>
-        <input {{ if .IsAdmin }} checked{{ end }}
+        <input {{ if .IsAdmin }}checked{{ end }}
                id="is-admin"
                name="is-admin"
                type="checkbox"
-               value="{{ .IsAdmin }}" />
+               value="1" />
       </div>
       {{ if .UsernameDuplicate }}
       <span class="error">This username already exist.</span>

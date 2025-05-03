@@ -234,48 +234,74 @@ func (db *DB) LoadAccountByUsername(username string) (*model.Account, error) {
 	return &account, nil
 }
 
-func (db *DB) SaveAccount(account *model.Account) error {
-	_, err := db.Exec(
-		`UPDATE accounts
-           SET username = ?,
-               salt = ?,
-               password_hash = ?,
-               is_admin = ?,
-               password_reset = ?
-           WHERE id = ?`,
-		account.Username,
-		account.Salt,
-		account.PasswordHash,
-		account.IsAdmin,
-		account.PasswordReset,
-		account.Id)
-	if err != nil {
-		return fmt.Errorf("failed to update account id %s: %w", account.Id, err)
-	}
-	return nil
+func (db *DB) SaveAccount(account *model.Account) (bool, error) {
+	ret := false
+	return ret, db.WithTransaction(func(tx *sql.Tx) error {
+		_, err := tx.ExecContext(db.ctx,
+			`UPDATE accounts
+               SET username = ?,
+                   salt = ?,
+                   password_hash = ?,
+                   is_admin = ?,
+                   password_reset = ?
+               WHERE id = ?`,
+			account.Username,
+			account.Salt,
+			account.PasswordHash,
+			account.IsAdmin,
+			account.PasswordReset,
+			account.Id)
+		if err != nil {
+			var sqliteErr sqlite3.Error
+			if errors.As(err, &sqliteErr) {
+				if sqliteErr.Code == sqlite3.ErrNo(sqlite3.ErrConstraint) {
+					return nil
+				}
+			}
+			return fmt.Errorf("failed to update account id %s: %w", account.Id, err)
+		}
+		data, err := json.Marshal(account)
+		if err != nil {
+			return fmt.Errorf("failed to marshal account %s: %w", account.Username, err)
+		}
+		_, err = tx.ExecContext(db.ctx,
+			`UPDATE sessions
+               SET data = jsonb_replace(data,
+                                        '$.account', jsonb(:data))
+               WHERE data->'account'->>'id' = :id`,
+			sql.Named("data", data),
+			sql.Named("id", account.Id))
+		if err != nil {
+			return fmt.Errorf("failed to update account settings for user account %s: %w", account.Username, err)
+		}
+		ret = true
+		return nil
+	})
 }
 
 func (db *DB) SaveAccountSettings(account *model.Account, settings *model.Settings) error {
-	data, err := json.Marshal(settings)
-	if err != nil {
-		return fmt.Errorf("failed to marshal settings for user accont %s: %w", account.Username, err)
-	}
-	_, err = db.Exec(`UPDATE accounts SET settings = ? WHERE id = ?`, data, account.Id)
-	if err != nil {
-		return fmt.Errorf("failed to update account settings for user account %s: %w", account.Username, err)
-	}
-	_, err = db.Exec(
-		`UPDATE sessions
-           SET data = jsonb_replace(data,
-                                    '$.settings', jsonb(:data),
-                                    '$.account.settings', jsonb(:data))
-           WHERE data->'account'->>'id' = :id`,
-		sql.Named("data", data),
-		sql.Named("id", account.Id))
-	if err != nil {
-		return fmt.Errorf("failed to update account settings for user account %s: %w", account.Username, err)
-	}
-	return nil
+	return db.WithTransaction(func(tx *sql.Tx) error {
+		data, err := json.Marshal(settings)
+		if err != nil {
+			return fmt.Errorf("failed to marshal settings for user account %s: %w", account.Username, err)
+		}
+		_, err = tx.ExecContext(db.ctx, `UPDATE accounts SET settings = ? WHERE id = ?`, data, account.Id)
+		if err != nil {
+			return fmt.Errorf("failed to update account settings for user account %s: %w", account.Username, err)
+		}
+		_, err = tx.ExecContext(db.ctx,
+			`UPDATE sessions
+               SET data = jsonb_replace(data,
+                                        '$.settings', jsonb(:data),
+                                        '$.account.settings', jsonb(:data))
+               WHERE data->'account'->>'id' = :id`,
+			sql.Named("data", data),
+			sql.Named("id", account.Id))
+		if err != nil {
+			return fmt.Errorf("failed to update account settings for user account %s: %w", account.Username, err)
+		}
+		return nil
+	})
 }
 
 func (db *DB) TouchAccount(account *model.Account) error {

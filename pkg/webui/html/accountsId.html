@@ -1,5 +1,5 @@
 {{ define "main" }}
-<h1>User Account</h1>
+<h1>{{ .Account.Username }}</h1>
 {{ if ne .Account.PasswordReset nil }}
 <h2>Password Reset</h2>
 <article>
@@ -37,14 +37,14 @@
                id="username"
                name="username"
                type="text"
-               value="{{ .Username }}">
+               value="{{ if eq .Username "" }}{{ .Account.Username }}{{ else }}{{ .Username }}{{ end }}">
         <label for="is-admin">Is Admin</label>
         <input {{ if .Account.IsAdmin }}checked{{ end }}
                {{ if eq .Page.Session.Data.Account.Id.String .Account.Id.String }}disabled{{ end }}
                id="is-admin"
                name="is-admin"
                type="checkbox"
-               value="{{ .IsAdmin }}" />
+               value="1" />
       </div>
       {{ if .UsernameDuplicate }}
       <span class="error">This username already exist.</span>

@@ -51,7 +51,7 @@ func handleAccountsPOST(db *database.DB) http.Handler {
 			return
 		}
 		accountUsername := r.FormValue("username")
-		isAdmin := r.FormValue("isAdmin")
+		isAdmin := r.FormValue("is-admin")
 		page := AccountsPage{
 			Page:     makePage(r, &Page{Title: "New Account", Section: "accounts"}),
 			Accounts: accounts,

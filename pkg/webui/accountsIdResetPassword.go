@@ -81,9 +81,15 @@ func handleAccountsIdResetPasswordPOST(db *database.DB) http.Handler {
 			return
 		}
 		account.SetPassword(password)
-		if err := db.SaveAccount(account); err != nil {
+		success, err := db.SaveAccount(account)
+		if err != nil {
 			errorResponse(w, r, http.StatusInternalServerError,
 				fmt.Errorf("failed to save account: %w", err))
+			return
+		}
+		if !success {
+			errorResponse(w, r, http.StatusInternalServerError,
+				fmt.Errorf("failed to save account: table constraint error"))
 			return
 		}
 		render(w, accountsIdResetPasswordTemplates, http.StatusOK,

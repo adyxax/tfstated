@@ -87,23 +87,52 @@ func handleAccountsIdPOST(db *database.DB) http.Handler {
 		if page == nil {
 			return
 		}
+		session := r.Context().Value(model.SessionContextKey{}).(*model.Session)
 		action := r.FormValue("action")
 		switch action {
 		case "delete":
 			errorResponse(w, r, http.StatusNotImplemented, nil)
 			return
 		case "edit":
-			errorResponse(w, r, http.StatusNotImplemented, nil)
-			return
+			page.Username = r.FormValue("username")
+			isAdmin := r.FormValue("is-admin")
+			if ok := validUsername.MatchString(page.Username); !ok {
+				page.UsernameInvalid = true
+				render(w, accountsIdTemplates, http.StatusBadRequest, page)
+				return
+			}
+			if page.Account.Id != session.Data.Account.Id {
+				page.Account.IsAdmin = isAdmin == "1"
+			}
+			prev := page.Account.Username
+			page.Account.Username = page.Username
+			success, err := db.SaveAccount(page.Account)
+			if err != nil {
+				errorResponse(w, r, http.StatusInternalServerError,
+					fmt.Errorf("failed to save account: %w", err))
+				return
+			}
+			if !success {
+				page.Account.Username = prev
+				page.UsernameDuplicate = true
+				render(w, accountsIdTemplates, http.StatusBadRequest, page)
+				return
+			}
 		case "reset-password":
 			if err := page.Account.ResetPassword(); err != nil {
 				errorResponse(w, r, http.StatusNotImplemented,
 					fmt.Errorf("failed to reset password: %w", err))
 				return
 			}
-			if err := db.SaveAccount(page.Account); err != nil {
+			success, err := db.SaveAccount(page.Account)
+			if err != nil {
 				errorResponse(w, r, http.StatusInternalServerError,
 					fmt.Errorf("failed to save account: %w", err))
+				return
+			}
+			if !success {
+				errorResponse(w, r, http.StatusInternalServerError,
+					fmt.Errorf("failed to save account: table constraint error"))
 				return
 			}
 			if err := db.DeleteSessions(page.Account); err != nil {
