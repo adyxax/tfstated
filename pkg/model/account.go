@@ -21,11 +21,19 @@ type Account struct {
 	LastLogin     time.Time  `json:"last_login"`
 	Settings      *Settings  `json:"settings"`
 	PasswordReset *uuid.UUID `json:"password_reset"`
+	Deleted       bool       `json:"deleted"`
 }
 
 func (account *Account) CheckPassword(password string) bool {
 	hash := helpers.HashPassword(password, account.Salt)
 	return subtle.ConstantTimeCompare(hash, account.PasswordHash) == 1
+}
+
+func (account *Account) MarkForDeletion() {
+	account.Salt = nil
+	account.PasswordHash = nil
+	account.PasswordReset = nil
+	account.Deleted = true
 }
 
 func (account *Account) ResetPassword() error {

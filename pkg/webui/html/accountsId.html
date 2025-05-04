@@ -21,10 +21,12 @@
   <strong>{{ .Account.LastLogin }}</strong>.
   {{ end }}
 </p>
-{{ if .Account.IsAdmin }}
+{{ if .Account.Deleted }}
+<p>This accounts is <strong>marked for deletion</strong>!</p>
+{{ else if .Account.IsAdmin }}
 <p>This accounts has <strong>admin</strong> privileges on TfStated.</p>
 {{ end }}
-{{ if .Page.Session.Data.Account.IsAdmin }}
+{{ if and (not .Account.Deleted) .Page.Session.Data.Account.IsAdmin }}
 <h2>Operations</h2>
 <div class="flex-row">
   <form action="/accounts/{{ .Account.Id }}" method="post">

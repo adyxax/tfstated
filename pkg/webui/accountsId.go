@@ -91,8 +91,25 @@ func handleAccountsIdPOST(db *database.DB) http.Handler {
 		action := r.FormValue("action")
 		switch action {
 		case "delete":
-			errorResponse(w, r, http.StatusNotImplemented, nil)
-			return
+			if !page.Account.Deleted {
+				page.Account.MarkForDeletion()
+				success, err := db.SaveAccount(page.Account)
+				if err != nil {
+					errorResponse(w, r, http.StatusInternalServerError,
+						fmt.Errorf("failed to save account: %w", err))
+					return
+				}
+				if !success {
+					errorResponse(w, r, http.StatusInternalServerError,
+						fmt.Errorf("failed to save account: this cannot happen"))
+					return
+				}
+				if err := db.DeleteSessions(page.Account); err != nil {
+					errorResponse(w, r, http.StatusInternalServerError,
+						fmt.Errorf("failed to delete sessions: %w", err))
+					return
+				}
+			}
 		case "edit":
 			page.Username = r.FormValue("username")
 			isAdmin := r.FormValue("is-admin")
@@ -119,8 +136,13 @@ func handleAccountsIdPOST(db *database.DB) http.Handler {
 				return
 			}
 		case "reset-password":
+			if page.Account.Deleted {
+				errorResponse(w, r, http.StatusBadRequest,
+					fmt.Errorf("You cannot reset the password for this account because it is marked for deletion."))
+				return
+			}
 			if err := page.Account.ResetPassword(); err != nil {
-				errorResponse(w, r, http.StatusNotImplemented,
+				errorResponse(w, r, http.StatusInternalServerError,
 					fmt.Errorf("failed to reset password: %w", err))
 				return
 			}
@@ -137,7 +159,7 @@ func handleAccountsIdPOST(db *database.DB) http.Handler {
 			}
 			if err := db.DeleteSessions(page.Account); err != nil {
 				errorResponse(w, r, http.StatusInternalServerError,
-					fmt.Errorf("failed to save account: %w", err))
+					fmt.Errorf("failed to delete sessions: %w", err))
 				return
 			}
 		default:

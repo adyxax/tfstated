@@ -11,9 +11,11 @@ CREATE TABLE accounts (
   created INTEGER NOT NULL DEFAULT (unixepoch()),
   last_login INTEGER NOT NULL DEFAULT (unixepoch()),
   settings BLOB NOT NULL,
-  password_reset TEXT
+  password_reset TEXT,
+  deleted INTEGER NOT NULL DEFAULT 0
 ) STRICT;
 CREATE UNIQUE INDEX accounts_username ON accounts(username);
+CREATE INDEX accounts_deleted ON accounts(deleted);
 
 CREATE TABLE sessions (
   id BLOB PRIMARY KEY,

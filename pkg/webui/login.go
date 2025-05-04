@@ -72,7 +72,7 @@ func handleLoginPOST(db *database.DB) http.Handler {
 				fmt.Errorf("failed to load account by username %s: %w", username, err))
 			return
 		}
-		if account == nil || !account.CheckPassword(password) {
+		if account == nil || account.Deleted || !account.CheckPassword(password) {
 			renderForbidden(w, r, username)
 			return
 		}

@@ -30,11 +30,10 @@ func (db *DB) CreateAccount(username string, isAdmin bool) (*model.Account, erro
 	}
 	_, err := db.Exec(
 		`INSERT INTO accounts(id, username, is_Admin, settings, password_reset)
-           VALUES (?, ?, ?, jsonb(?), ?);`,
+           VALUES (?, ?, ?, jsonb('{}'), ?);`,
 		accountId,
 		username,
 		isAdmin,
-		[]byte("{}"),
 		passwordReset,
 	)
 	if err != nil {
@@ -73,13 +72,12 @@ func (db *DB) InitAdminAccount() error {
 			hash := helpers.HashPassword(password.String(), salt)
 			if _, err := tx.ExecContext(db.ctx,
 				`INSERT INTO accounts(id, username, salt, password_hash, is_admin, settings)
-		       VALUES (:id, "admin", :salt, :hash, TRUE, jsonb(:settings))
-		       ON CONFLICT DO UPDATE SET password_hash = :hash
+		       VALUES (:id, "admin", :salt, :hash, TRUE, jsonb('{}'))
+		       ON CONFLICT DO UPDATE SET password_hash = :hash, is_admin = TRUE
 		         WHERE username = "admin";`,
 				sql.Named("id", accountId),
 				sql.Named("hash", hash),
 				sql.Named("salt", salt),
-				sql.Named("settings", []byte("{}")),
 			); err == nil {
 				AdvertiseAdminPassword(password.String())
 			} else {
@@ -93,7 +91,7 @@ func (db *DB) InitAdminAccount() error {
 func (db *DB) LoadAccounts() ([]model.Account, error) {
 	rows, err := db.Query(
 		`SELECT id, username, salt, password_hash, is_admin, created, last_login,
-                json_extract(settings, '$'), password_reset FROM accounts;`)
+                json_extract(settings, '$'), password_reset, deleted FROM accounts;`)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load accounts from database: %w", err)
 	}
@@ -115,7 +113,8 @@ func (db *DB) LoadAccounts() ([]model.Account, error) {
 			&created,
 			&lastLogin,
 			&settings,
-			&account.PasswordReset)
+			&account.PasswordReset,
+			&account.Deleted)
 		if err != nil {
 			return nil, fmt.Errorf("failed to load account from row: %w", err)
 		}
@@ -171,7 +170,7 @@ func (db *DB) LoadAccountById(id *uuid.UUID) (*model.Account, error) {
 	)
 	err := db.QueryRow(
 		`SELECT username, salt, password_hash, is_admin, created, last_login,
-                json_extract(settings, '$'), password_reset
+                json_extract(settings, '$'), password_reset, deleted
            FROM accounts
            WHERE id = ?;`,
 		id,
@@ -182,7 +181,8 @@ func (db *DB) LoadAccountById(id *uuid.UUID) (*model.Account, error) {
 		&created,
 		&lastLogin,
 		&settings,
-		&account.PasswordReset)
+		&account.PasswordReset,
+		&account.Deleted)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
@@ -208,7 +208,7 @@ func (db *DB) LoadAccountByUsername(username string) (*model.Account, error) {
 	)
 	err := db.QueryRow(
 		`SELECT id, salt, password_hash, is_admin, created, last_login,
-                json_extract(settings, '$'), password_reset
+                json_extract(settings, '$'), password_reset, deleted
            FROM accounts
            WHERE username = ?;`,
 		username,
@@ -219,7 +219,8 @@ func (db *DB) LoadAccountByUsername(username string) (*model.Account, error) {
 		&created,
 		&lastLogin,
 		&settings,
-		&account.PasswordReset)
+		&account.PasswordReset,
+		&account.Deleted)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
@@ -243,13 +244,15 @@ func (db *DB) SaveAccount(account *model.Account) (bool, error) {
                    salt = ?,
                    password_hash = ?,
                    is_admin = ?,
-                   password_reset = ?
+                   password_reset = ?,
+                   deleted = ?
                WHERE id = ?`,
 			account.Username,
 			account.Salt,
 			account.PasswordHash,
 			account.IsAdmin,
 			account.PasswordReset,
+			account.Deleted,
 			account.Id)
 		if err != nil {
 			var sqliteErr sqlite3.Error
