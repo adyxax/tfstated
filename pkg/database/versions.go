@@ -35,8 +35,10 @@ func (db *DB) LoadVersionById(id uuid.UUID) (*model.Version, error) {
 		}
 		return nil, fmt.Errorf("failed to load version id %s from database: %w", id, err)
 	}
-	if err := json.Unmarshal(lock, &version.Lock); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal lock data: %w", err)
+	if lock != nil {
+		if err := json.Unmarshal(lock, &version.Lock); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal lock data: %w", err)
+		}
 	}
 	version.Created = time.Unix(created, 0)
 	version.Data, err = db.dataEncryptionKey.DecryptAES256(encryptedData)
@@ -65,8 +67,10 @@ func (db *DB) LoadVersionsByState(state *model.State) ([]model.Version, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to load version from row: %w", err)
 		}
-		if err := json.Unmarshal(lock, &version.Lock); err != nil {
-			return nil, fmt.Errorf("failed to unmarshal lock data: %w", err)
+		if lock != nil {
+			if err := json.Unmarshal(lock, &version.Lock); err != nil {
+				return nil, fmt.Errorf("failed to unmarshal lock data: %w", err)
+			}
 		}
 		version.Created = time.Unix(created, 0)
 		versions = append(versions, version)
