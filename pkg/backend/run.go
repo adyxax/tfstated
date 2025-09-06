@@ -12,6 +12,7 @@ import (
 
 func Run(
 	ctx context.Context,
+	cancel context.CancelFunc,
 	db *database.DB,
 	getenv func(string) string,
 ) *http.Server {
@@ -35,6 +36,7 @@ func Run(
 		Handler: logger.Middleware(mux, false),
 	}
 	go func() {
+		defer cancel()
 		slog.Info("backend http server listening", "address", httpServer.Addr)
 		if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			slog.Error("error listening and serving backend http server", "address", httpServer.Addr, "error", err)

@@ -27,8 +27,8 @@ func run(
 		return err
 	}
 
-	backend := backend.Run(ctx, db, getenv)
-	webui := webui.Run(ctx, db, getenv)
+	backend := backend.Run(ctx, cancel, db, getenv)
+	webui := webui.Run(ctx, cancel, db, getenv)
 
 	<-ctx.Done()
 	shutdownCtx := context.Background()
