@@ -96,7 +96,7 @@ func NewDB(ctx context.Context, url string, getenv func(string) string) (*DB, er
 	if sessionsSalt == "" {
 		return nil, fmt.Errorf("the TFSTATED_SESSIONS_SALT environment variable is not set")
 	}
-	if err := db.sessionsSalt.FromBase64(dataEncryptionKey); err != nil {
+	if err := db.sessionsSalt.FromBase64(sessionsSalt); err != nil {
 		return nil, fmt.Errorf("failed to decode the TFSTATED_SESSIONS_SALT environment variable, expected 32 bytes base64 encoded: %w", err)
 	}
 	versionsHistoryLimit := getenv("TFSTATED_VERSIONS_HISTORY_LIMIT")
