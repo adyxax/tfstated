@@ -36,19 +36,16 @@ func run(
 	defer shutdownCancel()
 
 	var wg sync.WaitGroup
-	wg.Add(2)
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
 		if err := backend.Shutdown(shutdownCtx); err != nil {
 			slog.Error("error shutting down backend http server", "error", err)
 		}
-	}()
-	go func() {
-		defer wg.Done()
+	})
+	wg.Go(func() {
 		if err := webui.Shutdown(shutdownCtx); err != nil {
 			slog.Error("error shutting down webui http server", "error", err)
 		}
-	}()
+	})
 	wg.Wait()
 
 	return nil
