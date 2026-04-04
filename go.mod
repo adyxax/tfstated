@@ -3,7 +3,7 @@ module git.adyxax.org/adyxax/tfstated
 go 1.26.1
 
 require (
-	github.com/mattn/go-sqlite3 v1.14.37
+	github.com/mattn/go-sqlite3 v1.14.40
 	go.n16f.net/uuid v0.0.0-20251120121934-372c52119b7f
 	golang.org/x/crypto v0.49.0
 )
