@@ -5,5 +5,5 @@ go 1.26.4
 require (
 	github.com/mattn/go-sqlite3 v1.14.45
 	go.n16f.net/uuid v0.0.0-20251120121934-372c52119b7f
-	golang.org/x/crypto v0.52.0
+	golang.org/x/crypto v0.53.0
 )
